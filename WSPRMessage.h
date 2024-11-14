@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string.h>
+#include <cstdint>
+#include <string>
 
 #include "WSPR.h"
 
@@ -9,7 +10,7 @@ class WSPRMessage
 {
 public:
 
-    bool SetCallsign(const string callsign)
+    bool SetCallsign(const std::string callsign)
     {
         bool retVal = false;
 
@@ -23,9 +24,9 @@ public:
         return retVal;
     }
 
-    string GetCallsign() const { return callsign_; }
+    std::string GetCallsign() const { return callsign_; }
     
-    bool SetGrid(const string grid)
+    bool SetGrid(const std::string grid)
     {
         bool retVal = false;
 
@@ -39,7 +40,7 @@ public:
         return retVal;
     }
 
-    string GetGrid() const { return grid_; }
+    std::string GetGrid() const { return grid_; }
 
     bool SetPowerDbm(uint8_t powerDbm)
     {
@@ -61,8 +62,8 @@ public:
 
 private:
 
-    string  callsign_ = "0A0AAA";
-    string  grid_     = "AA00";
-    uint8_t powerDbm_ = 0;
+    std::string callsign_ = "0A0AAA";
+    std::string grid_     = "AA00";
+    uint8_t     powerDbm_ = 0;
 };
 

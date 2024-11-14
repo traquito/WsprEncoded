@@ -4,9 +4,7 @@
 #include <cctype>
 #include <cstdint>
 #include <string>
-#include <unordered_map>
 #include <vector>
-using namespace std;
 
 
 
@@ -15,26 +13,26 @@ class WSPR
 private:
 
     // trim from end of string (right)
-    static std::string& RTrim(std::string& s, string t = " \t\n\r\f\v")
+    static std::string& RTrim(std::string& s, std::string t = " \t\n\r\f\v")
     {
         s.erase(s.find_last_not_of(t.c_str()) + 1);
         return s;
     }
 
     // trim from beginning of string (left)
-    static std::string& LTrim(std::string& s, string t = " \t\n\r\f\v")
+    static std::string& LTrim(std::string& s, std::string t = " \t\n\r\f\v")
     {
         s.erase(0, s.find_first_not_of(t.c_str()));
         return s;
     }
 
     // trim from both ends of string (right then left)
-    static std::string& Trim(std::string& s, string t = " \t\n\r\f\v")
+    static std::string& Trim(std::string& s, std::string t = " \t\n\r\f\v")
     {
         return LTrim(RTrim(s, t), t);
     }
 
-    static string& ToUpper(string &s)
+    static std::string& ToUpper(std::string &s)
     {
         for (char &c : s)
         {
@@ -47,7 +45,7 @@ private:
     // positive values mean rotate right
     // negative values mean rotate left
     // zero results in no rotation
-    static vector<uint8_t> &Rotate(vector<uint8_t> &valList, int count)
+    static std::vector<uint8_t> &Rotate(std::vector<uint8_t> &valList, int count)
     {
         if (count > 0)
         {
@@ -74,11 +72,11 @@ private:
 
     struct BandData
     {
-        string band;
+        std::string band;
         uint32_t freq;
     };
 
-    inline static vector<BandData> bandDataList_ = {
+    inline static std::vector<BandData> bandDataList_ = {
         { "2190m",        136'000 },
         { "630m",         474'200 },
         { "160m",       1'836'600 },
@@ -98,7 +96,7 @@ private:
         { "23cm",   1'296'500'000 },
     };
 
-    inline static const vector<uint8_t> powerDbmList_ = {
+    inline static const std::vector<uint8_t> powerDbmList_ = {
          0,  3,  7,
         10, 13, 17,
         20, 23, 27,
@@ -111,7 +109,7 @@ private:
 
 public:
 
-    static const vector<uint8_t> &GetPowerDbmList()
+    static const std::vector<uint8_t> &GetPowerDbmList()
     {
         return powerDbmList_;
     }
@@ -133,7 +131,7 @@ public:
         return retVal;
     }
 
-    static uint32_t GetDialFreqFromBandStr(string bandStr)
+    static uint32_t GetDialFreqFromBandStr(std::string bandStr)
     {
         bandStr = GetDefaultBandIfNotValid(bandStr);
 
@@ -151,9 +149,9 @@ public:
         return dialFreq;
     }
 
-    static string GetDefaultBandIfNotValid(string bandStr)
+    static std::string GetDefaultBandIfNotValid(std::string bandStr)
     {
-        string retVal = "20m";
+        std::string retVal = "20m";
 
         for (const auto &bandData : bandDataList_)
         {
@@ -180,11 +178,11 @@ public:
         return retVal;
     }
 
-    static bool CallsignIsValid(const string callsign)
+    static bool CallsignIsValid(const std::string callsign)
     {
         bool retVal = false;
 
-        string cs = callsign;
+        std::string cs = callsign;
         Trim(cs);
         ToUpper(cs);
 
@@ -197,7 +195,7 @@ public:
         return retVal;
     }
 
-    static bool Grid4IsValid(const string grid)
+    static bool Grid4IsValid(const std::string grid)
     {
         bool retVal = false;
 
@@ -221,7 +219,7 @@ public:
     }
 
     // minute list, some bands are defined as rotation from 20m
-    static vector<uint8_t> GetMinuteListForBand(string band)
+    static std::vector<uint8_t> GetMinuteListForBand(std::string band)
     {
         band = GetDefaultBandIfNotValid(band);
 
@@ -238,10 +236,10 @@ public:
         }
 
         // rotation is modded place within this list
-        vector<uint8_t> rotationList = { 4, 2, 0, 3, 1 };
+        std::vector<uint8_t> rotationList = { 4, 2, 0, 3, 1 };
         uint8_t rotation = rotationList[idx % 5];
 
-        vector<uint8_t> minuteList = { 8, 0, 2, 4, 6 };
+        std::vector<uint8_t> minuteList = { 8, 0, 2, 4, 6 };
         minuteList = Rotate(minuteList, rotation);
 
         return minuteList;
@@ -249,24 +247,24 @@ public:
 
     struct ChannelDetails
     {
-        string   band     = "20m";
-        uint16_t channel  = 0;
-        char     id1      = '0';
-        char     id3      ='0';
-        string   id13     = "00";
-        uint8_t  min      = 8;
-        uint8_t  lane     = 1;
-        uint32_t freq     = 14'097'020ULL;
-        uint32_t freqDial = 14'095'600ULL;
+        std::string   band     = "20m";
+        uint16_t      channel  = 0;
+        char          id1      = '0';
+        char          id3      = '0';
+        std::string   id13     = "00";
+        uint8_t       min      = 8;
+        uint8_t       lane     = 1;
+        uint32_t      freq     = 14'097'020ULL;
+        uint32_t      freqDial = 14'095'600ULL;
     };
 
-    static ChannelDetails GetChannelDetails(string bandStr, uint16_t channelIn)
+    static ChannelDetails GetChannelDetails(std::string bandStr, uint16_t channelIn)
     {
         bandStr = GetDefaultBandIfNotValid(bandStr);
         channelIn = GetDefaultChannelIfNotValid(channelIn);
 
-        vector<char> id1List = { '0', '1', 'Q' };
-        vector<char> id3List = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        std::vector<char> id1List = { '0', '1', 'Q' };
+        std::vector<char> id3List = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
         uint32_t dialFreq = GetDialFreqFromBandStr(bandStr);
 
@@ -277,9 +275,9 @@ public:
         uint8_t freqBandCount = 5;
         uint8_t bandSizeHz = freqTxWindow / freqBandCount;
 
-        vector<uint8_t> freqBandList = { 1, 2, 4, 5 };    // skip middle band 3, but really label as 1,2,3,4
+        std::vector<uint8_t> freqBandList = { 1, 2, 4, 5 };    // skip middle band 3, but really label as 1,2,3,4
 
-        vector<uint8_t> minuteList = GetMinuteListForBand(bandStr);
+        std::vector<uint8_t> minuteList = GetMinuteListForBand(bandStr);
 
         uint8_t rowCount = 0;
         for (auto freqBand : freqBandList)
@@ -314,7 +312,7 @@ public:
                                 .channel  = channel,
                                 .id1      = id1,
                                 .id3      = id3,
-                                .id13     = string{} + id1 + id3,
+                                .id13     = std::string{} + id1 + id3,
                                 .min      = minute,
                                 .lane     = freqBandLabel,
                                 .freq     = freqTxLow + freqBandCenter,

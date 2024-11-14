@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <cmath>
 #include <string>
-using namespace std;
+#include <utility>
 
 #include "WSPRMessage.h"
 
@@ -14,7 +15,7 @@ public:
 
     // char 1 has to be 0, 1, or Q
     // char 2 has to be in range 0-9
-    bool SetId13(const string id13)
+    bool SetId13(const std::string id13)
     {
         bool retVal = false;
 
@@ -37,10 +38,10 @@ public:
         return retVal;
     }
 
-    string GetId13() const { return grid56_; }
+    std::string GetId13() const { return grid56_; }
 
     // both chars have to be in range A-X
-    bool SetGrid56(const string grid56)
+    bool SetGrid56(const std::string grid56)
     {
         bool retVal = false;
 
@@ -63,7 +64,7 @@ public:
         return retVal;
     }
 
-    string GetGrid56() const { return grid56_; }
+    std::string GetGrid56() const { return grid56_; }
 
     // must be in range 0 to 21340
     void SetAltM(int32_t altM)
@@ -142,9 +143,9 @@ private:
         return retVal;
     }
 
-    static string EncodeCallsign(string id13, string grid56, uint32_t altM)
+    static std::string EncodeCallsign(std::string id13, std::string grid56, uint32_t altM)
     {
-        string callsign;
+        std::string callsign;
 
         // pick apart inputs
         char grid5 = grid56[0];
@@ -175,12 +176,12 @@ private:
         char id5 = 'A' + id5Val;
         char id6 = 'A' + id6Val;
         
-        callsign = string{ id13[0], id2, id13[1], id4, id5, id6 };
+        callsign = std::string{ id13[0], id2, id13[1], id4, id5, id6 };
 
         return callsign;
     }
 
-    static pair<string, uint8_t> EncodeGridPower(int8_t tempCIn, double voltageIn, uint8_t speedKnots, bool gpsValid)
+    static std::pair<std::string, uint8_t> EncodeGridPower(int8_t tempCIn, double voltageIn, uint8_t speedKnots, bool gpsValid)
     {
         // parse input presentations
         double tempC   = tempCIn;
@@ -215,15 +216,15 @@ private:
         char g4 = '0' + g4Val;
 
         // form results
-        string  grid  = string{ g1, g2, g3, g4 };
-        uint8_t power = WSPR::GetPowerDbmList()[powerVal];
+        std::string grid  = std::string{ g1, g2, g3, g4 };
+        uint8_t     power = WSPR::GetPowerDbmList()[powerVal];
         
         return { grid, power };
     }
 
     void Recalculate()
     {
-        string callsign = EncodeCallsign(id13_, grid56_, altM_);
+        std::string callsign = EncodeCallsign(id13_, grid56_, altM_);
 
         auto [grid, power] = EncodeGridPower(tempC_, voltage_, speedKnots_, gpsValid_);
 
@@ -237,12 +238,12 @@ private:
 
 private:
 
-    string   id13_       = "00";
-    string   grid56_     = "00";
-    uint32_t altM_       = 0;
-    int8_t   tempC_      = 0;
-    double   voltage_    = 3.3;
-    uint8_t  speedKnots_ = 0;
-    bool     gpsValid_   = false;
+    std::string id13_       = "00";
+    std::string grid56_     = "00";
+    uint32_t    altM_       = 0;
+    int8_t      tempC_      = 0;
+    double      voltage_    = 3.3;
+    uint8_t     speedKnots_ = 0;
+    bool        gpsValid_   = false;
 };
 
