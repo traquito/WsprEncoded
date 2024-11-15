@@ -1,5 +1,5 @@
 all:
-	g++ -std=c++17 -g -Wall test.cpp -o test
+	g++ -std=c++17 -g -Werror -Wall -Wextra test.cpp -o test
 
 test:
 	chmod +x test
