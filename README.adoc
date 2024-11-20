@@ -1,16 +1,23 @@
-# WsprEncoded
+:repository-owner: traquito
+:repository-name: WsprEncoded
+
+= {repository-name} WsprEncoded =
+
+image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/check-arduino.yml/badge.svg["Check Arduino status", link="https://github.com/{repository-owner}/{repository-name}/actions/workflows/check-arduino.yml"]
+image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/compile-examples.yml/badge.svg["Compile Examples status", link="https://github.com/{repository-owner}/{repository-name}/actions/workflows/compile-examples.yml"]
+
 
 This is the repo for standardizing and implementing the design of encoded WSPR messages as used by balloon trackers.
 
 
-# Audience
+= Audience =
 
 Developers of trackers.
 
 Anyone else who wants to know.
 
 
-# Goals
+= Goals =
 
 Developers should be able to use this repo to:
 - Understand the big idea
@@ -22,9 +29,7 @@ Developers should be able to use this repo to:
   - Requiring no external or additional libraries to work
 
 
-# Thoughts on technical details of how
-
-## Documentation - Technical
+= Thoughts on technical details of how =
 
 Need to decide between (say) wiki vs (say) markdown.
 
@@ -35,6 +40,6 @@ Markdown is simple to write, and get revision history.
 
 
 
-# Other TODOs
+= Other TODOs =
 
 Write out CONTRIBUTING.md
