@@ -38,7 +38,7 @@ public:
         return retVal;
     }
 
-    std::string GetId13() const { return grid56_; }
+    std::string GetId13() const { return id13_; }
 
     // both chars have to be in range A-X
     bool SetGrid56(const std::string grid56)
