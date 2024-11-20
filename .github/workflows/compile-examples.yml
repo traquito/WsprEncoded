@@ -33,10 +33,6 @@ jobs:
 
       matrix:
         board:
-          - fqbn: arduino:avr:uno
-            platforms: |
-              - name: arduino:avr
-            artifact-name-suffix: arduino-avr-uno
           - fqbn: arduino:mbed_portenta:envie_m7
             platforms: |
               - name: arduino:mbed_portenta
