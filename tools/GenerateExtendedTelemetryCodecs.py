@@ -259,7 +259,7 @@ class WsprCodecMaker:
 
         # Constructor
         a.IncrIndent()
-        a.A(f'explicit {self.json["name"]}Codec() final')
+        a.A(f'explicit {self.json["name"]}Codec()')
         a.A('{')
         a.IncrIndent()
         a.A('Reset();')
@@ -270,44 +270,34 @@ class WsprCodecMaker:
         # Setters / Getters
         for field in self.json['fieldList']:
             # Setter
-            # Protect against using certain header fields
-            setterPrivateList = [
-                "HdrTelemetryType",
-                "HdrRESERVED",
-            ]
-            if field["name"] not in setterPrivateList:
-                a.A('')
-                a.IncrIndent()
-                a.A(f'void Set{field["name"]}{field["unit"]}({field["Type"]} inputVal)')
-                a.A('{')
-                a.IncrIndent()
+            a.A('')
+            a.IncrIndent()
+            a.A(f'void Set{field["name"]}{field["unit"]}({field["Type"]} inputVal)')
+            a.A('{')
+            a.IncrIndent()
 
-                a.A(f'{field["Type"]} val = inputVal;')
-                a.A('')
-                a.A(f'if (val < {field["lowValue"]}) {{ val = {field["lowValue"]}; }}')
-                a.A(f'else if (val > {field["highValue"]}) {{ val = {field["highValue"]}; }}')
-                a.A('')
-                a.A(f'{field["name"]} = val;')
+            a.A(f'{field["Type"]} val = inputVal;')
+            a.A('')
+            a.A(f'if (val < {field["lowValue"]}) {{ val = {field["lowValue"]}; }}')
+            a.A(f'else if (val > {field["highValue"]}) {{ val = {field["highValue"]}; }}')
+            a.A('')
+            a.A(f'{field["name"]} = val;')
 
-                a.DecrIndent()
-                a.A('}')
-                a.DecrIndent()
+            a.DecrIndent()
+            a.A('}')
+            a.DecrIndent()
 
-            getterPrivateList = [
-                "HdrRESERVED",
-            ]
-            if field["name"] not in getterPrivateList:
-                a.A('')
-                a.IncrIndent()
-                a.A(f'inline {field["Type"]} Get{field["name"]}{field["unit"]}() const')
-                a.A('{')
-                a.IncrIndent()
+            a.A('')
+            a.IncrIndent()
+            a.A(f'inline {field["Type"]} Get{field["name"]}{field["unit"]}() const')
+            a.A('{')
+            a.IncrIndent()
 
-                a.A(f'return {field["name"]};')
+            a.A(f'return {field["name"]};')
 
-                a.DecrIndent()
-                a.A('}')
-                a.DecrIndent()
+            a.DecrIndent()
+            a.A('}')
+            a.DecrIndent()
 
         a.A('')
 
@@ -627,7 +617,7 @@ class WsprCodecMaker:
         a.A('')
         a.A('return 0;')
         a.DecrIndent()
-        a.A('}')
+        a.A('};')
 
         return a.Get()
 
@@ -664,7 +654,7 @@ def ProcessCodecDef(fieldDefFile, outHeaderDir, outTestDir):
             codecClassCode = codecMaker.GenerateCodecClassDef()
             print(codecClassCode)
             os.makedirs(outHeaderDir, exist_ok=True)
-            fqFile = os.path.join(outHeaderDir, f'{messageTypeName}.h')
+            fqFile = os.path.join(outHeaderDir, f'{messageTypeName}Codec.h')
             f = open(fqFile, "w")
             f.write(codecClassCode)
             f.close()
@@ -672,7 +662,7 @@ def ProcessCodecDef(fieldDefFile, outHeaderDir, outTestDir):
             testCode = codecMaker.GenerateTest()
             print(testCode)
             os.makedirs(outTestDir, exist_ok=True)
-            fqFile = os.path.join(outTestDir, f'Test{messageTypeName}.cpp')
+            fqFile = os.path.join(outTestDir, f'Test{messageTypeName}Codec.cpp')
             f = open(fqFile, "w")
             f.write(testCode)
             f.close()
