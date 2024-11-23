@@ -125,7 +125,7 @@ public:
     bool GetGpsValid() const { return gpsValid_; }
 
 
-private:
+// private:
 
     static char EncodeBase36(uint8_t val)
     {
