@@ -5,6 +5,7 @@
 using namespace std;
 
 #include "WSPRMessageU4B.h"
+#include "WSPRMessageU4BDecoder.h"
 
 
 struct FieldDef
@@ -13,16 +14,17 @@ struct FieldDef
     double lowValue;
     double highValue;
     double stepSize;
+    double testStepSize;
 };
 
 static FieldDef fieldDefList[] = {
-    { .name = "grid5",       .lowValue = 'A', .highValue = 'X',   .stepSize = 1,    },
-    { .name = "grid6",       .lowValue = 'A', .highValue = 'X',   .stepSize = 1,    },
-    { .name = "altM",        .lowValue = 0,   .highValue = 21340, .stepSize = 1,    },
-    { .name = "tempC",       .lowValue = -50, .highValue = 39,    .stepSize = 1,    },
-    { .name = "voltage",     .lowValue = 3.0, .highValue = 4.95,  .stepSize = 0.05, },
-    { .name = "speedKnots",  .lowValue = 0,   .highValue = 82,    .stepSize = 1,    },
-    { .name = "gpsValid",    .lowValue = 0,   .highValue = 1,     .stepSize = 1,    },
+    { .name = "grid5",       .lowValue = 'A', .highValue = 'X',   .stepSize = 1,    .testStepSize = 1,    },
+    { .name = "grid6",       .lowValue = 'A', .highValue = 'X',   .stepSize = 1,    .testStepSize = 1,    },
+    { .name = "altM",        .lowValue = 0,   .highValue = 21340, .stepSize = 20,   .testStepSize = 1,    },
+    { .name = "tempC",       .lowValue = -50, .highValue = 39,    .stepSize = 1,    .testStepSize = 1,    },
+    { .name = "voltage",     .lowValue = 3.0, .highValue = 4.95,  .stepSize = 0.05, .testStepSize = 0.05, },
+    { .name = "speedKnots",  .lowValue = 0,   .highValue = 82,    .stepSize = 2,    .testStepSize = 1,    },
+    { .name = "gpsValid",    .lowValue = 0,   .highValue = 1,     .stepSize = 1,    .testStepSize = 1,    },
 };
 
 
@@ -68,34 +70,54 @@ static auto GetStep = [](const string &name){
     return retVal;
 };
 
-const double grid5Low  = GetLow("grid5");
-const double grid5High = GetHigh("grid5");
-const double grid5Step = GetStep("grid5");
+static auto GetTestStep = [](const string &name){
+    double retVal = 0;
 
-const double grid6Low  = GetLow("grid6");
-const double grid6High = GetHigh("grid6");
-const double grid6Step = GetStep("grid6");
+    for (const auto &fieldDef : fieldDefList)
+    {
+        if (fieldDef.name == name)
+        {
+            retVal = fieldDef.testStepSize;
+        }
+    }
 
-const double altMLow  = GetLow("altM");
-const double altMHigh = GetHigh("altM");
-const double altMStep = GetStep("altM");
+    return retVal;
+};
 
-const double tempCLow  = GetLow("tempC");
-const double tempCHigh = GetHigh("tempC");
-const double tempCStep = GetStep("tempC");
+const double grid5Low      = GetLow("grid5");
+const double grid5High     = GetHigh("grid5");
+const double grid5Step     = GetStep("grid5");
+const double grid5TestStep = GetTestStep("grid5");
 
-const double voltageLow  = GetLow("voltage");
-const double voltageHigh = GetHigh("voltage");
-const double voltageStep = GetStep("voltage");
+const double grid6Low      = GetLow("grid6");
+const double grid6High     = GetHigh("grid6");
+const double grid6Step     = GetStep("grid6");
+const double grid6TestStep = GetTestStep("grid6");
 
-const double speedKnotsLow  = GetLow("speedKnots");
-const double speedKnotsHigh = GetHigh("speedKnots");
-const double speedKnotsStep = GetStep("speedKnots");
+const double altMLow      = GetLow("altM");
+const double altMHigh     = GetHigh("altM");
+const double altMStep     = GetStep("altM");
+const double altMTestStep = GetTestStep("altM");
 
-const double gpsValidLow  = GetLow("gpsValid");
-const double gpsValidHigh = GetHigh("gpsValid");
-const double gpsValidStep = GetStep("gpsValid");
+const double tempCLow      = GetLow("tempC");
+const double tempCHigh     = GetHigh("tempC");
+const double tempCStep     = GetStep("tempC");
+const double tempCTestStep = GetTestStep("tempC");
 
+const double voltageLow      = GetLow("voltage");
+const double voltageHigh     = GetHigh("voltage");
+const double voltageStep     = GetStep("voltage");
+const double voltageTestStep = GetTestStep("voltage");
+
+const double speedKnotsLow      = GetLow("speedKnots");
+const double speedKnotsHigh     = GetHigh("speedKnots");
+const double speedKnotsStep     = GetStep("speedKnots");
+const double speedKnotsTestStep = GetTestStep("speedKnots");
+
+const double gpsValidLow      = GetLow("gpsValid");
+const double gpsValidHigh     = GetHigh("gpsValid");
+const double gpsValidStep     = GetStep("gpsValid");
+const double gpsValidTestStep = GetTestStep("gpsValid");
 
 
 static uint64_t calcMax = 1;
@@ -122,23 +144,121 @@ void Test(string name, double grid5LowOverride, double grid5HighOverride, double
     {
         grid56[0] = grid5;
 
-        for (char grid6 = grid6Low; grid6 <= grid6High; grid6 += grid6Step)
+        for (char grid6 = grid6Low; grid6 <= grid6High; grid6 += grid6TestStep)
         {
             grid56[1] = grid6;
 
-            for (uint16_t altM = altMLow; altM <= altMHigh; altM += altMStep)
+            for (uint16_t altM = altMLow; altM <= altMHigh; altM += altMTestStep)
             {
                 string call = WSPRMessageU4B::EncodeCallsign(id13, grid56, altM);
 
-                for (int8_t tempC = tempCLow; tempC <= tempCHigh; tempC += tempCStep)
+                auto [grid56Decoded, altMDecoded] = WSPRMessageU4BDecoder::DecodeU4BCall(call);
+
+                if (grid56Decoded != grid56)
                 {
-                    for (double voltage = voltageLow; voltage <= voltageHigh; voltage += voltageStep)
+                    cout << "grid56 decode error" << endl;
+                }
+                
+                if (altMDecoded != altM)
+                {
+                    // check if altM got snapped
+                    uint16_t altMSnapped = round(altM / altMStep) * (uint32_t)altMStep;
+                    if (altMDecoded != altMSnapped)
                     {
-                        for (uint8_t speedKnots = speedKnotsLow; speedKnots <= speedKnotsHigh; speedKnots += speedKnotsStep)
+                        cout << "altM decode error" << endl;
+                        cout << "Input : " << id13 << " " << grid56        << " " << altM        << endl;
+                        cout << "Output: " << "  " << " " << grid56Decoded << " " << altMDecoded << endl;
+                        cout << "Snap'd: " << "  " << " " << "  "          << " " << altMSnapped << endl;
+
+                        cout << endl;
+                    }
+                }
+
+                for (int8_t tempC = tempCLow; tempC <= tempCHigh; tempC += tempCTestStep)
+                {
+                    for (double voltage = voltageLow; voltage <= voltageHigh; voltage += voltageTestStep)
+                    {
+                        for (uint8_t speedKnots = speedKnotsLow; speedKnots <= speedKnotsHigh; speedKnots += speedKnotsTestStep)
                         {
-                            for (uint8_t gpsValid = gpsValidLow; gpsValid <= gpsValidHigh; gpsValid += gpsValidStep)
+                            for (uint8_t gpsValid = gpsValidLow; gpsValid <= gpsValidHigh; gpsValid += gpsValidTestStep)
                             {
                                 auto [grid, power] = WSPRMessageU4B::EncodeGridPower(tempC, voltage, speedKnots, gpsValid);
+
+                                auto [ telemetryId, tempCDecoded, voltageDecoded, speedKnotsDecoded, gpsValidDecoded ] = WSPRMessageU4BDecoder::DecodeU4BGridPower(grid, power);
+
+
+                                bool err = false;
+                                if (tempCDecoded != tempC)
+                                {
+                                    err = true;
+                                    cout << "tempC decode error" << endl;
+                                }
+
+                                if (voltageDecoded != voltage)
+                                {
+                                    // I don't remember enough about floats to nail down what specifically is the
+                                    // issue here, but it's clearly a floating point manipulation issue if it falls
+                                    // in this range.
+                                    //
+                                    // https://stackoverflow.com/questions/17333/how-do-you-compare-float-and-double-while-accounting-for-precision-loss
+                                    //
+                                    // the epsilon below is the smallest tick movable in a double.
+                                    // through testing, I'm seeing the diff within multiples of that
+                                    // eg:
+                                    // diff     : 2.66454e-15
+                                    // abs(diff): 2.66454e-15
+                                    // epsilon  : 2.22045e-16
+                                    // epsilon2x: 4.44089e-16
+                                    // 
+                                    // that's how many zeroes. they're the same number.
+                                    //
+                                    // just see if they're within a billionth of one another, good enough
+                                    if (fabs(voltageDecoded - voltage) > (0.000'000'000'001))
+                                    {
+                                        err = true;
+                                        cout << "voltage decode error" << endl;
+                                        cout << "  diff     : " << (voltageDecoded - voltage) << endl;
+                                        cout << "  abs(diff): " << fabs(voltageDecoded - voltage) << endl;
+                                        cout << "  epsilon  : " << std::numeric_limits<double>::epsilon() << endl;
+                                        cout << "  epsilon2x: " << std::numeric_limits<double>::epsilon() * 2 << endl;
+                                    }
+                                }
+
+                                if (speedKnotsDecoded != speedKnots)
+                                {
+                                    // check if speedKnots got snapped
+                                    uint16_t speedKnotsSnapped = round(speedKnots / speedKnotsStep) * (uint32_t)speedKnotsStep;
+                                    if (speedKnotsDecoded != speedKnotsSnapped)
+                                    {
+                                        err = true;
+                                        cout << "speedKnots decode error" << endl;
+                                        cout << "Snapped: " << speedKnotsSnapped << endl;
+                                    }
+                                }
+
+                                if (gpsValidDecoded != gpsValid)
+                                {
+                                    err = true;
+                                    cout << "gpsValid decode error" << endl;
+                                }
+
+                                if (telemetryId != 1)
+                                {
+                                    err = true;
+                                    cout << "telemetryId says non-standard telemetry error!" << endl;
+                                }
+
+                                if (err)
+                                {
+                                    cout << "Input : " << (int)tempC        << " " << voltage        << " " << (int)speedKnots        << " " << (int)gpsValid        << endl;
+                                    cout << "Output: " << (int)tempCDecoded << " " << voltageDecoded << " " << (int)speedKnotsDecoded << " " << (int)gpsValidDecoded << endl;
+                                    cout << "Via   : " << grid << " " << (int)power << endl;
+
+                                    cout << "Power Val: " << (int)DecodePowerToNum(power) << endl;
+
+                                    cout << endl;
+                                }
+                                
 
                                 // cout << id13 << " " << grid56 << " " << altM << " " << (int)tempC << " " << voltage << " " << (int)speedKnots << " " << (int)gpsValid << endl;
                                 // cout << call << " " << grid << " " << (int)power << endl;
@@ -161,6 +281,8 @@ void Report()
 
     while (1)
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
         ++count;
 
         uint64_t threadCalcsDone = 0;
@@ -171,7 +293,8 @@ void Report()
 
         double pct = threadCalcsDone * 100.0 / calcMax;
         cout << count << ": " << endl;
-        cout << fixed << setprecision(4) << pct << " % " << "done " << threadCalcsDone << " / " << calcMax << endl;
+        // cout << fixed << setprecision(4) << pct << " % " << "done " << threadCalcsDone << " / " << calcMax << endl;
+        cout << pct << " % " << "done " << threadCalcsDone << " / " << calcMax << endl;
 
         uint32_t rate = threadCalcsDone / count;
         uint32_t rateMs = rate / 1000;
@@ -181,8 +304,6 @@ void Report()
         cout << "Hours remaining: " << hoursRemaining << endl;
 
         cout << endl;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         if (threadCalcsDone >= calcMax)
         {
@@ -195,7 +316,7 @@ int main(int argc, char *argv[])
 {
     for (const auto &fieldDef : fieldDefList)
     {
-        calcMax *= ((fieldDef.highValue - fieldDef.lowValue) / fieldDef.stepSize) + 1;
+        calcMax *= ((fieldDef.highValue - fieldDef.lowValue) / fieldDef.testStepSize) + 1;
     }
 
     cout << "Calculations required: " << calcMax << endl;
@@ -203,17 +324,21 @@ int main(int argc, char *argv[])
     unsigned int numCores = thread::hardware_concurrency();
     cout << "Number of cores: " << numCores << endl;
 
-    thread t1 (Test, to_string(1),  'A', 'B', 1);
-    thread t2 (Test, to_string(2),  'C', 'D', 1);
-    thread t3 (Test, to_string(3),  'E', 'F', 1);
-    thread t4 (Test, to_string(4),  'G', 'H', 1);
-    thread t5 (Test, to_string(5),  'I', 'J', 1);
-    thread t6 (Test, to_string(6),  'K', 'L', 1);
-    thread t7 (Test, to_string(7),  'M', 'N', 1);
-    thread t8 (Test, to_string(8),  'O', 'P', 1);
-    thread t9 (Test, to_string(9),  'Q', 'R', 1);
-    thread t10(Test, to_string(10), 'S', 'U', 1);   // 2
-    thread t11(Test, to_string(11), 'V', 'X', 1);   // 2
+    cout << endl;
+    cout << endl;
+    cout << endl;
+
+    thread t1 (Test, to_string(1),  'A', 'B', grid5TestStep);
+    thread t2 (Test, to_string(2),  'C', 'D', grid5TestStep);
+    thread t3 (Test, to_string(3),  'E', 'F', grid5TestStep);
+    thread t4 (Test, to_string(4),  'G', 'H', grid5TestStep);
+    thread t5 (Test, to_string(5),  'I', 'J', grid5TestStep);
+    thread t6 (Test, to_string(6),  'K', 'L', grid5TestStep);
+    thread t7 (Test, to_string(7),  'M', 'N', grid5TestStep);
+    thread t8 (Test, to_string(8),  'O', 'P', grid5TestStep);
+    thread t9 (Test, to_string(9),  'Q', 'R', grid5TestStep);
+    thread t10(Test, to_string(10), 'S', 'U', grid5TestStep);   // 2
+    thread t11(Test, to_string(11), 'V', 'X', grid5TestStep);   // 2
     thread tReport(Report);
 
     tReport.join();
