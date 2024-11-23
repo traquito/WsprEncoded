@@ -27,6 +27,53 @@ class StrAccumulator:
     def Get(self):
         return self.str
 
+# fix lines with same features but different spacing between them.
+# requires all lines to have same number of separated elements.
+def Align(strList, splitCharList = [" "]):
+    for splitChar in splitCharList:
+        # init array of max lens to the first string in the list
+        maxLenList = [0] * len(strList[0].split(splitChar))
+
+        print(f"first line len: {len(maxLenList)}")
+
+        # for each string, find out max len of each component
+        for str in strList:
+            strPartList = str.split(splitChar)
+
+            print(f"strPartList len: {len(strPartList)}")
+
+            i = 0
+            for strPart in strPartList:
+                strPart = strPart.lstrip()
+                strPartLen = len(strPart)
+
+                if strPartLen > maxLenList[i]:
+                    maxLenList[i] = strPartLen
+
+                i += 1
+
+        # break strings up and pad them to be the max len
+        strListNew = []
+        for str in strList:
+            strPartList = str.split(splitChar)
+            strPartListNew = []
+
+            i = 0
+            for strPart in strPartList:
+                strPart = strPart.lstrip()
+                strPart = strPart.ljust(maxLenList[i])
+                strPartListNew.append(strPart)
+
+                i += 1
+            
+            strNew = splitChar.join(strPartListNew)
+
+            strListNew.append(strNew)
+        
+        strList = strListNew
+
+    return strListNew
+
 
 #####################################################################
 # Codec Logic and Code Generation
@@ -313,8 +360,12 @@ class WsprCodecMaker:
         a.A('')
 
         a.A('// combine field values')
+        strList = []
         for field in fieldEncodeList:
-            a.A(f'val *= {field["NumValues"]}; val += Get{field["name"]}{field["unit"]}Number();')
+            strList.append(f'val *= {field["NumValues"]}; val += Get{field["name"]}{field["unit"]}Number();')
+
+        for strNew in Align(strList, ["; "]):
+            a.A(strNew)
 
         a.A('')
 
@@ -400,9 +451,12 @@ class WsprCodecMaker:
         a.A('')
         a.A('// extract field values')
 
+        strList = []
         for field in fieldDecodeList:
-            a.A(f'Set{field["name"]}{field["unit"]}({field["lowValue"]} + ((val % {field["NumValues"]}) * {field["stepSize"]})); val = Math.floor(val / {field["NumValues"]});')
-        
+            strList.append(f'Set{field["name"]}{field["unit"]}({field["lowValue"]} + ((val % {field["NumValues"]}) * {field["stepSize"]})); val /= {field["NumValues"]};')
+        for str in Align(strList, ["(", "+ ", "* ", "))", "(val "]):
+            a.A(str)
+
         a.DecrIndent()
         a.A('}')
         a.DecrIndent()
