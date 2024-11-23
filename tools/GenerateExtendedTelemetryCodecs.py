@@ -34,13 +34,9 @@ def Align(strList, splitCharList = [" "]):
         # init array of max lens to the first string in the list
         maxLenList = [0] * len(strList[0].split(splitChar))
 
-        print(f"first line len: {len(maxLenList)}")
-
         # for each string, find out max len of each component
         for str in strList:
             strPartList = str.split(splitChar)
-
-            print(f"strPartList len: {len(strPartList)}")
 
             i = 0
             for strPart in strPartList:
@@ -170,6 +166,11 @@ class WsprCodecMaker:
                                 self.AddErr(f'Field({field["name"]}) lowValue({field["lowValue"]}) must be less than highValue({field["highValue"]})')
 
                         if ok:
+                            if field['stepSize'] <= 0:
+                                ok = False
+                                self.AddErr(f'Field({field["name"]}) stepSize({field["stepSize"]}) must be positive')
+
+                        if ok:
                             stepCount = (field['highValue'] - field['lowValue']) / field['stepSize']
 
                             if not stepCount.is_integer():
@@ -205,23 +206,48 @@ class WsprCodecMaker:
             field['Bits'] = math.log2(field['NumValues'])
             field['BitsSum'] = field['Bits'] + bitsSum
 
+            # calculate types
+            if isinstance(field['lowValue'], float) or isinstance(field['highValue'], float) or isinstance(field['stepSize'], float):
+                field['Type'] = "double"
+            else:
+                # check range
+                signed = False
+                if field['lowValue'] < 0:
+                    signed = True
+                
+                # decide if u/int8_t, u/int16_t, u/int32_t
+                # (max range of integer values with 29.5 bits: 0 - 759'250'123)
+                type = "<unknown>"
+                if signed:
+                    if field['lowValue'] >= -128 and field['highValue'] <= 127:
+                        type = "int8_t"
+                    elif field['lowValue'] >= -32768 and field['highValue'] <= 32767:
+                        type = "int16_t"
+                    else:
+                        type = "int32_t"
+                else:
+                    if field['highValue'] <= 255:
+                        type = "uint8_t"
+                    elif field['highValue'] <= 65535:
+                        type = "uint16_t"
+                    else:
+                        type = "uint32_t"
+
+                field['Type'] = type
+
+
             bitsLast = field['Bits']
             bitsSum += field['Bits']
 
         if self.debug:
             print(self.json['fieldList'])
 
-    def GetCodec(self):
-        c = self.GenerateCodecClassDef()
-        if self.debug:
-            print(c)
-        
-        return c
-
     def GenerateCodecClassDef(self):
         a = StrAccumulator()
 
         a.A('#pragma once')
+        a.A('')
+        a.A('#include <cmath>')
         a.A('')
         a.A('#include "WSPRMessage.h"')
         a.A('')
@@ -233,7 +259,7 @@ class WsprCodecMaker:
 
         # Constructor
         a.IncrIndent()
-        a.A(f'{self.json["name"]}Codec()')
+        a.A(f'explicit {self.json["name"]}Codec() final')
         a.A('{')
         a.IncrIndent()
         a.A('Reset();')
@@ -241,83 +267,47 @@ class WsprCodecMaker:
         a.A('}')
         a.DecrIndent()
 
-        a.A('')
-
-        # Set id13
-        a.IncrIndent()
-        a.A('SetId13(id13)')
-        a.A('{')
-        a.IncrIndent()
-        a.A('id13 = id13;')
-        a.DecrIndent()
-        a.A('}')
-        a.DecrIndent()
-
-        a.A('')
-
-        # Get id13
-        a.IncrIndent()
-        a.A('inline <type> GetId13(id13) const')
-        a.A('{')
-        a.IncrIndent()
-        a.A('return id13;')
-        a.DecrIndent()
-        a.A('}')
-        a.DecrIndent()
-
         # Setters / Getters
         for field in self.json['fieldList']:
-            a.A('')
-
             # Setter
-            a.IncrIndent()
-            a.A(f'Set{field["name"]}{field["unit"]}(inputVal)')
-            a.A('{')
-            a.IncrIndent()
+            # Protect against using certain header fields
+            setterPrivateList = [
+                "HdrTelemetryType",
+                "HdrRESERVED",
+            ]
+            if field["name"] not in setterPrivateList:
+                a.A('')
+                a.IncrIndent()
+                a.A(f'void Set{field["name"]}{field["unit"]}({field["Type"]} inputVal)')
+                a.A('{')
+                a.IncrIndent()
 
-            a.A(f'let val = inputVal ?? {field["lowValue"]};')
-            a.A('')
-            a.A(f'if (val < {field["lowValue"]}) {{ val = {field["lowValue"]}; }}')
-            a.A(f'else if (val > {field["highValue"]}) {{ val = {field["highValue"]}; }}')
-            a.A('')
-            a.A(f'{field["name"]} = val;')
+                a.A(f'{field["Type"]} val = inputVal;')
+                a.A('')
+                a.A(f'if (val < {field["lowValue"]}) {{ val = {field["lowValue"]}; }}')
+                a.A(f'else if (val > {field["highValue"]}) {{ val = {field["highValue"]}; }}')
+                a.A('')
+                a.A(f'{field["name"]} = val;')
 
-            a.DecrIndent()
-            a.A('}')
-            a.DecrIndent()
+                a.DecrIndent()
+                a.A('}')
+                a.DecrIndent()
 
-            a.A('')
+            getterPrivateList = [
+                "HdrRESERVED",
+            ]
+            if field["name"] not in getterPrivateList:
+                a.A('')
+                a.IncrIndent()
+                a.A(f'inline {field["Type"]} Get{field["name"]}{field["unit"]}() const')
+                a.A('{')
+                a.IncrIndent()
 
-            # Getter
-            a.IncrIndent()
-            a.A(f'inline <type> Get{field["name"]}{field["unit"]}() const')
-            a.A('{')
-            a.IncrIndent()
+                a.A(f'return {field["name"]};')
 
-            a.A(f'return {field["name"]};')
-
-            a.DecrIndent()
-            a.A('}')
-            a.DecrIndent()
-
-            a.A('')
-
-            # Encoded Number Getter
-            a.IncrIndent()
-            a.A(f'inline <type> Get{field["name"]}{field["unit"]}Number() const')
-            a.A('{')
-            a.IncrIndent()
-
-            a.A(f'let retVal = null;')
-            a.A('')
-            a.A(f'retVal = ((Get{field["name"]}{field["unit"]}() - {field["lowValue"]}) / {field["stepSize"]});')
-            a.A(f'retVal = Math.round(retVal);')
-            a.A('')
-            a.A(f'return retVal;')
-
-            a.DecrIndent()
-            a.A('}')
-            a.DecrIndent()
+                a.DecrIndent()
+                a.A('}')
+                a.DecrIndent()
 
         a.A('')
 
@@ -370,31 +360,31 @@ class WsprCodecMaker:
         a.A('')
 
         a.A('// encode into power')
-        a.A('uint8_t powerVal = val % 19; val = Math.floor(val / 19);')
-        a.A('uint8_t powerDbm = WSPR::GetPowerDbmList()[powerVal];;')
+        a.A('uint8_t powerVal = val % 19; val /= 19;')
+        a.A('uint8_t powerDbm = WSPR::GetPowerDbmList()[powerVal];')
         a.A('')
         a.A('// encode into grid')
-        a.A('uint8_t g4Val = val % 10; val = Math.floor(val / 10);')
-        a.A('uint8_t g3Val = val % 10; val = Math.floor(val / 10);')
-        a.A('uint8_t g2Val = val % 18; val = Math.floor(val / 18);')
-        a.A('uint8_t g1Val = val % 18; val = Math.floor(val / 18);')
+        a.A('uint8_t g4Val = val % 10; val /= 10;')
+        a.A('uint8_t g3Val = val % 10; val /= 10;')
+        a.A('uint8_t g2Val = val % 18; val /= 18;')
+        a.A('uint8_t g1Val = val % 18; val /= 18;')
         a.A('')
-        a.A('char g1 = String.fromCharCode("A".charCodeAt(0) + g1Val);')
-        a.A('char g2 = String.fromCharCode("A".charCodeAt(0) + g2Val);')
-        a.A('char g3 = String.fromCharCode("0".charCodeAt(0) + g3Val);')
-        a.A('char g4 = String.fromCharCode("0".charCodeAt(0) + g4Val);')
+        a.A('char g1 = \'A\' + g1Val;')
+        a.A('char g2 = \'A\' + g2Val;')
+        a.A('char g3 = \'0\' + g3Val;')
+        a.A('char g4 = \'0\' + g4Val;')
         a.A('let grid = g1 + g2 + g3 + g4;')
         a.A('')
         a.A('// encode into callsign')
-        a.A('uint8_t id6Val = val % 26; val = Math.floor(val / 26);')
-        a.A('uint8_t id5Val = val % 26; val = Math.floor(val / 26);')
-        a.A('uint8_t id4Val = val % 26; val = Math.floor(val / 26);')
-        a.A('uint8_t id2Val = val % 36; val = Math.floor(val / 36);')
+        a.A('uint8_t id6Val = val % 26; val /= 26;')
+        a.A('uint8_t id5Val = val % 26; val /= 26;')
+        a.A('uint8_t id4Val = val % 26; val /= 26;')
+        a.A('uint8_t id2Val = val % 36; val /= 36;')
         a.A('')
         a.A('char id2 = wsprEncoded.EncodeBase36(id2Val);')
-        a.A('char id4 = String.fromCharCode("A".charCodeAt(0) + id4Val);')
-        a.A('char id5 = String.fromCharCode("A".charCodeAt(0) + id5Val);')
-        a.A('char id6 = String.fromCharCode("A".charCodeAt(0) + id6Val);')
+        a.A('char id4 = \'A\' + id4Val;')
+        a.A('char id5 = \'A\' + id5Val;')
+        a.A('char id6 = \'A\' + id6Val;')
         a.A('let call = id13.at(0) + id2 + id13.at(1) + id4 + id5 + id6;')
         a.A('')
         a.A('// capture results')
@@ -420,22 +410,22 @@ class WsprCodecMaker:
         a.A('// pull in inputs')
         a.A('let call     = GetCall();')
         a.A('let grid     = GetGrid();')
-        a.A('let powerDbm = GetPowerDbm();')
+        a.A('uint8_t powerDbm = GetPowerDbm();')
         a.A('')
         a.A('// break call down')
-        a.A('let id2Val = wsprEncoded.DecodeBase36(call.charAt(1));')
-        a.A('let id4Val = call.charAt(3).charCodeAt(0) - "A".charCodeAt(0);')
-        a.A('let id5Val = call.charAt(4).charCodeAt(0) - "A".charCodeAt(0);')
-        a.A('let id6Val = call.charAt(5).charCodeAt(0) - "A".charCodeAt(0);')
+        a.A('uint8_t id2Val = wsprEncoded.DecodeBase36(call.charAt(1));')
+        a.A('uint8_t id4Val = call.charAt(3).charCodeAt(0) - \'A\';')
+        a.A('uint8_t id5Val = call.charAt(4).charCodeAt(0) - \'A\';')
+        a.A('uint8_t id6Val = call.charAt(5).charCodeAt(0) - \'A\';')
         a.A('')
         a.A('// break grid down')
-        a.A('let g1Val = grid.charAt(0).charCodeAt(0) - "A".charCodeAt(0);')
-        a.A('let g2Val = grid.charAt(1).charCodeAt(0) - "A".charCodeAt(0);')
-        a.A('let g3Val = grid.charAt(2).charCodeAt(0) - "0".charCodeAt(0);')
-        a.A('let g4Val = grid.charAt(3).charCodeAt(0) - "0".charCodeAt(0);')
+        a.A('uint8_t g1Val = grid.charAt(0).charCodeAt(0) - \'A\';')
+        a.A('uint8_t g2Val = grid.charAt(1).charCodeAt(0) - \'A\';')
+        a.A('uint8_t g3Val = grid.charAt(2).charCodeAt(0) - \'0\';')
+        a.A('uint8_t g4Val = grid.charAt(3).charCodeAt(0) - \'0\';')
         a.A('')
         a.A('// break power down')
-        a.A('let powerVal = wsprEncoded.DecodePowerToNum(powerDbm);')
+        a.A('uint8_t powerVal = wsprEncoded.DecodePowerToNum(powerDbm);')
         a.A('')
         a.A('// combine values into single integer')
         a.A('uint32_t val = 0;')
@@ -465,7 +455,7 @@ class WsprCodecMaker:
 
         # SetCall
         a.IncrIndent()
-        a.A('SetCall(inputVal)')
+        a.A('void SetCall(inputVal)')
         a.A('{')
         a.IncrIndent()
         a.A('call = inputVal;')
@@ -489,7 +479,7 @@ class WsprCodecMaker:
 
         # SetGrid
         a.IncrIndent()
-        a.A('SetGrid(inputVal)')
+        a.A('void SetGrid(inputVal)')
         a.A('{')
         a.IncrIndent()
         a.A('grid = inputVal;')
@@ -513,7 +503,7 @@ class WsprCodecMaker:
 
         # SetPowerDbm
         a.IncrIndent()
-        a.A('SetPowerDbm(inputVal)')
+        a.A('void SetPowerDbm(uint8_t inputVal)')
         a.A('{')
         a.IncrIndent()
         a.A('powerDbm = inputVal;')
@@ -525,10 +515,34 @@ class WsprCodecMaker:
 
         # GetPowerDbm
         a.IncrIndent()
-        a.A('inline <type> GetPowerDbm() const')
+        a.A('inline uint8_t GetPowerDbm() const')
         a.A('{')
         a.IncrIndent()
-        a.A('return parseInt(powerDbm);')
+        a.A('return powerDbm;')
+        a.DecrIndent()
+        a.A('}')
+        a.DecrIndent()
+
+        a.A('')
+
+        # Set id13
+        a.IncrIndent()
+        a.A('void SetId13(id13)')
+        a.A('{')
+        a.IncrIndent()
+        a.A('id13 = id13;')
+        a.DecrIndent()
+        a.A('}')
+        a.DecrIndent()
+
+        a.A('')
+
+        # Get id13
+        a.IncrIndent()
+        a.A('inline <type> GetId13(id13) const')
+        a.A('{')
+        a.IncrIndent()
+        a.A('return id13;')
         a.DecrIndent()
         a.A('}')
         a.DecrIndent()
@@ -538,6 +552,24 @@ class WsprCodecMaker:
 
         a.A('private:')
 
+        for field in self.json['fieldList']:
+            a.A('')
+
+            # Encoded Number Getter
+            a.IncrIndent()
+            a.A(f'uint32_t Get{field["name"]}{field["unit"]}Number() const')
+            a.A('{')
+            a.IncrIndent()
+
+            if field['stepSize'] == 1:
+                a.A(f'return (Get{field["name"]}{field["unit"]}() - {field["lowValue"]});')
+            else:
+                a.A(f'return round((double)(Get{field["name"]}{field["unit"]}() - {field["lowValue"]}) / (double){field["stepSize"]});')
+
+            a.DecrIndent()
+            a.A('}')
+            a.DecrIndent()
+        
         a.A('')
 
         # Reset
@@ -566,23 +598,38 @@ class WsprCodecMaker:
         a.A('')
 
         # member variables
-        a.A('inline <type> call;')
-        a.A('inline <type> grid;')
-        a.A('inline <type> powerDbm;')
+        a.A('<type> call;')
+        a.A('<type> grid;')
+        a.A('uint8_t powerDbm;')
         a.A('')
-        a.A('inline <type> id13;')
+        a.A('<type> id13;')
         a.A('')
         for field in self.json['fieldList']:
-            a.A(f'inline <type> {field["name"]};')
+            a.A(f'{field["Type"]} {field["name"]};')
 
         a.DecrIndent()
 
         a.DecrIndent()
         a.A('}')
 
-        c = a.Get()
+        return a.Get()
 
-        return c
+    def GenerateTest(self):
+        a = StrAccumulator()
+
+        a.A(f'#include "{self.json["name"]}Codec.h"')
+        a.A('')
+        a.A('')
+        a.A('int main(int argc, char *argv[])')
+        a.A('{')
+        a.IncrIndent()
+        a.A(f'{self.json["name"]}Codec c;')
+        a.A('')
+        a.A('return 0;')
+        a.DecrIndent()
+        a.A('}')
+
+        return a.Get()
 
 
 
@@ -590,7 +637,7 @@ class WsprCodecMaker:
 # File Processing
 #####################################################################
 
-def ProcessCodecDef(fieldDefFile):
+def ProcessCodecDef(fieldDefFile, outHeaderDir, outTestDir):
     retVal = True
 
     try:
@@ -608,18 +655,28 @@ def ProcessCodecDef(fieldDefFile):
 
     if retVal:
         codecMaker = WsprCodecMaker()
-        # codecMaker.SetDebug(True)
 
-        retVal = codecMaker.SetCodecDefFragment("MyMessageType", fieldDefStr)
+        messageTypeName = fieldDefFile.split(".")[0]
+
+        retVal = codecMaker.SetCodecDefFragment(messageTypeName, fieldDefStr)
 
         if retVal:
-            # print()
-            # print()
-            # print()
-            # print()
-            # print()
-            cppCode = codecMaker.GetCodec()
-            print(cppCode)
+            codecClassCode = codecMaker.GenerateCodecClassDef()
+            print(codecClassCode)
+            os.makedirs(outHeaderDir, exist_ok=True)
+            fqFile = os.path.join(outHeaderDir, f'{messageTypeName}.h')
+            f = open(fqFile, "w")
+            f.write(codecClassCode)
+            f.close()
+
+            testCode = codecMaker.GenerateTest()
+            print(testCode)
+            os.makedirs(outTestDir, exist_ok=True)
+            fqFile = os.path.join(outTestDir, f'Test{messageTypeName}.cpp')
+            f = open(fqFile, "w")
+            f.write(testCode)
+            f.close()
+
 
     return retVal
 
@@ -629,13 +686,15 @@ def ProcessCodecDef(fieldDefFile):
 #####################################################################
 
 def Main():
-    if len(sys.argv) < 2 or (len(sys.argv) >= 1 and sys.argv[1] == "--help"):
-        print("Usage: %s <codecDef.json>" % (os.path.basename(sys.argv[0])))
+    if len(sys.argv) < 4 or (len(sys.argv) >= 1 and sys.argv[1] == "--help"):
+        print("Usage: %s <MsgFieldCodecDef.json> <outHeaderDir> <outTestDir>" % (os.path.basename(sys.argv[0])))
         sys.exit(-1)
 
     codecDefJsonFile = sys.argv[1]
+    outHeaderDir     = sys.argv[2]
+    outTestDir       = sys.argv[3]
 
-    ProcessCodecDef(codecDefJsonFile)
+    ProcessCodecDef(codecDefJsonFile, outHeaderDir, outTestDir)
 
     return 0
 
