@@ -67,7 +67,6 @@ public:
     {
         bool retVal = false;
 
-        // check values
         if (Wspr::PowerDbmInSet(powerDbm))
         {
             powerDbm_ = powerDbm;
@@ -86,10 +85,6 @@ public:
 
 private:
 
-    // checks for:
-    // - callsign not padded with spaces
-    // - callsign is uppercase
-    // - callsign is the correct length
     static bool CallsignIsValid(const char *inputCallsign)
     {
         bool retVal = false;
