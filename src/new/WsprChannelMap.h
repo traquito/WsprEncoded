@@ -80,7 +80,7 @@ public:
         uint8_t freqBandCount = 5;
         uint8_t bandSizeHz = freqTxWindow / freqBandCount;
 
-        std::array<uint8_t, 5> freqBandList = { 1, 2, 4, 5 };    // skip middle band 3, but really label as 1,2,3,4
+        std::array<uint8_t, 4> freqBandList = { 1, 2, 4, 5 };    // skip middle band 3, but really label as 1,2,3,4
 
         std::array<uint8_t, 5> minuteList = GetMinuteListForBand(bandStr);
 
