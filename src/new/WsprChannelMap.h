@@ -45,7 +45,7 @@ public:
         uint8_t rotation = rotationList[idx % 5];
 
         std::array<uint8_t, 5> minuteList = { 8, 0, 2, 4, 6 };
-        minuteList = Rotate(minuteList, rotation);
+        minuteList = WsprUtl::Rotate(minuteList, rotation);
 
         return minuteList;
     }

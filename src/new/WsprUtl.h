@@ -5,6 +5,10 @@
 #include <cstring>
 
 
+namespace WsprUtl
+{
+
+
 class CString
 {
 public:
@@ -17,18 +21,24 @@ public:
 
     void Target(char *buf, size_t bufCapacity)
     {
-        buf_ = buf;
-        bufCapacity_ = bufCapacity;
+        if (buf && bufCapacity)
+        {
+            buf_ = buf;
+            bufCapacity_ = bufCapacity;
+        }
     }
 
     void Clear()
     {
-        memset(buf_, 0, bufCapacity_);
+        if (bufCapacity_)
+        {
+            memset(buf_, 0, bufCapacity_);
+        }
     }
 
     void Set(const char *str)
     {
-        if (str)
+        if (str && bufCapacity_)
         {
             Clear();
             strncpy(buf_, str, bufCapacity_ - 1);
@@ -37,90 +47,139 @@ public:
 
     void ToUpper()
     {
-        char *p = buf_;
-        while (*p != '\0')
+        if (bufCapacity_)
         {
-            *p = toupper(*p);
-            ++p;
+            char *p = buf_;
+            while (*p != '\0')
+            {
+                *p = toupper(*p);
+                ++p;
+            }
         }
     }
 
     bool IsPaddedLeft()
     {
-        return buf_[0] == ' ';
+        return bufCapacity_ && buf_[0] == ' ';
     }
 
     bool IsPaddedRight()
     {
-        return buf_[Len() - 1] == ' ';
+        bool retVal = false;
+
+        size_t len = Len();
+
+        if (len)
+        {
+            retVal = buf_[len - 1] == ' ';
+        }
+
+        return retVal;
     }
 
     bool IsUppercase()
     {
-        char *p = buf_;
+        // empty string considered uppercase
+        // non-alpha chars are considered uppercase
+        
+        bool retVal = false;
 
-        while (*p != '\0' && *p == toupper(*p))
+        if (bufCapacity_)
         {
-            ++p;
+            if (buf_[0] == '\0')
+            {
+                retVal = true;
+            }
+            else
+            {
+                char *p = buf_;
+
+                while (*p != '\0' && *p == toupper(*p))
+                {
+                    ++p;
+                }
+
+                retVal = *p == '\0';
+            }
         }
 
-        return *p == '\0';
+        return retVal;
     }
 
     bool IsEqual(const char *str)
     {
-        return strcmp(buf_, str) == 0;
+        bool retVal = false;
+
+        if (str && bufCapacity_)
+        {
+            retVal = strcmp(buf_, str) == 0;
+        }
+
+        return retVal;
     }
 
     size_t Len()
     {
-        return strlen(buf_);
+        size_t retVal = 0;
+
+        if (bufCapacity_)
+        {
+            retVal = strlen(buf_);
+        }
+
+        return retVal;
     }
 
     // shift left any spaces
     void TrimLeft()
     {
-        // find first non-space char
-        size_t idxFirst = 0;
-        while (buf_[idxFirst] == ' ')
+        if (bufCapacity_)
         {
-            ++idxFirst;
-        }
+            // find first non-space char
+            size_t idxFirst = 0;
+            while (buf_[idxFirst] == ' ')
+            {
+                ++idxFirst;
+            }
 
-        if (buf_[idxFirst] == '\0')
-        {
-            // whole string is whitespace
+            if (buf_[idxFirst] == '\0')
+            {
+                // whole string is whitespace
 
-            // null terminate the start of string
-            buf_[0] = '\0';
-        }
-        else if (idxFirst == 0)
-        {
-            // nothing to do
-        }
-        else
-        {
-            // there was some whitespace, shift
-            size_t len = Len();
+                // null terminate the start of string
+                Clear();
+            }
+            else if (idxFirst == 0)
+            {
+                // nothing to do
+            }
+            else
+            {
+                // there was some whitespace, shift
+                size_t len = Len();
 
-            memmove(buf_, &buf_[idxFirst], len - idxFirst);
-            buf_[len] = '\0';
+                memmove(buf_, &buf_[idxFirst], len - idxFirst);
+                buf_[len - idxFirst] = '\0';
+            }
         }
     }
 
     void TrimRight()
     {
-        size_t len = Len();
-
-        for (size_t i = len - 1; i <= 0; --i)
+        if (bufCapacity_)
         {
-            if (buf_[i] == ' ')
+            size_t len = Len();
+
+            for (size_t i = len - 1; i >= 0; --i)
             {
-                buf_[i] = '\0';
-            }
-            else
-            {
-                break;
+                if (buf_[i] == ' ')
+                {
+                    buf_[i] = '\0';
+                }
+                else
+                {
+                    break;
+                }
             }
         }
     }
@@ -164,3 +223,9 @@ static std::array<T, SIZE> &Rotate(std::array<T, SIZE> &valList, int count)
 
     return valList;
 }
+
+
+
+
+};
+

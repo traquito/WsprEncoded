@@ -4,6 +4,8 @@
 using namespace std;
 
 #include "TestUtl.h"
+using namespace TestUtl;
+
 #include "Wspr.h"
 
 

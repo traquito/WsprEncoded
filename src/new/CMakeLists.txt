@@ -16,4 +16,5 @@ target_compile_features(TestWsprMessageRegularType1 PRIVATE cxx_std_20)
 add_executable(TestWsprUtl TestWsprUtl.cpp)
 target_include_directories(TestWsprUtl PRIVATE .)
 add_test(NAME TestWsprUtl COMMAND TestWsprUtl)
+target_compile_features(TestWsprUtl PRIVATE cxx_std_20)
 

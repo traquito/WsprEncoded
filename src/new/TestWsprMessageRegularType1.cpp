@@ -5,6 +5,8 @@ using namespace std;
 
 
 #include "TestUtl.h"
+using namespace TestUtl;
+
 #include "WsprMessageRegularType1.h"
 #include "../WSPRMessage.h"
 

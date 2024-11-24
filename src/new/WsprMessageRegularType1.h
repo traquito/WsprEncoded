@@ -95,7 +95,7 @@ private:
             // temporary copy of string
             size_t len = strlen(inputCallsign);
             char buf[len + 1];
-            CString callsign((char *)buf, len + 1);
+            WsprUtl::CString callsign((char *)buf, len + 1);
             callsign.Set(inputCallsign);
 
             bool isPaddedLeft  = callsign.IsPaddedLeft();
@@ -150,11 +150,11 @@ private:
     static const uint8_t CALLSIGN_LEN_MAX = 6;
     static const uint8_t CALLSIGN_LEN_MIN = 4;
     char callsignBuf_[CALLSIGN_LEN_MAX + 1];
-    CString callsign_;
+    WsprUtl::CString callsign_;
 
     static const uint8_t GRID4_LEN = 4;
     char gridBuf_[GRID4_LEN + 1];
-    CString grid_;
+    WsprUtl::CString grid_;
 
     uint8_t powerDbm_ = 0;
 };
