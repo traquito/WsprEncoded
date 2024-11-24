@@ -1,6 +1,7 @@
 add_executable(TestWspr TestWspr.cpp)
 target_include_directories(TestWspr PRIVATE .)
 add_test(NAME TestWspr COMMAND TestWspr)
+target_compile_features(TestWspr PRIVATE cxx_std_20)
 
 add_executable(TestWsprChannelMap TestWsprChannelMap.cpp)
 target_include_directories(TestWsprChannelMap PRIVATE .)
