@@ -1,5 +1,6 @@
-# add_executable(TestWSPRMessageU4B TestWSPRMessageU4B.cpp)
-# target_include_directories(TestWSPRMessageU4B PUBLIC .)
+add_executable(TestWSPRMessageU4B TestWSPRMessageU4B.cpp)
+target_include_directories(TestWSPRMessageU4B PUBLIC .)
+target_compile_features(TestWSPRMessageU4B PRIVATE cxx_std_20)
 
 add_subdirectory(new)
 

@@ -6,6 +6,7 @@ using namespace std;
 
 #include "WSPRMessageU4B.h"
 #include "WSPRMessageU4BDecoder.h"
+#include "./new/WsprMessageTelemetryBasic.h"
 
 
 struct FieldDef
@@ -185,6 +186,122 @@ void Test(string name, double grid5LowOverride, double grid5HighOverride, double
                                 auto [grid, power] = WSPRMessageU4B::EncodeGridPower(tempC, voltage, speedKnots, gpsValid);
 
                                 auto [ telemetryId, tempCDecoded, voltageDecoded, speedKnotsDecoded, gpsValidDecoded ] = WSPRMessageU4BDecoder::DecodeU4BGridPower(grid, power);
+
+
+                                // quick hack to just throw in the new encoder/decoder
+                                {
+                                    WsprMessageTelemetryBasic tb;
+
+                                    // ENCODE
+                                    tb.SetAltitudeMeters(altM);
+                                    tb.SetTemperatureCelsius(tempC);
+                                    tb.SetVoltageVolts(voltage);
+                                    tb.SetSpeedKnots(speedKnots);
+                                    tb.SetGpsIsValid(gpsValid);
+                                    tb.SetGrid56(grid56.c_str());
+                                    
+                                    tb.SetId13(id13.c_str());
+                                    tb.Encode();
+
+                                    const char *tbCall = tb.GetCallsign();
+                                    const char *tbGrid = tb.GetGrid4();
+                                    uint8_t tbPowerDbm = tb.GetPowerDbm();
+
+                                    if (call != tbCall)
+                                    {
+                                        cout << "Call: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (grid != tbGrid)
+                                    {
+                                        cout << "Grid: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (power != tbPowerDbm)
+                                    {
+                                        cout << "pDbm: OH SHITTTTTT" << endl;
+                                    }
+                                }
+
+                                {
+                                    WsprMessageTelemetryBasic tb;
+
+                                    if (tb.SetCallsign(call.c_str()) == false)
+                                    {
+                                        cout << "Barfed on setting callsign to " << call.c_str() << endl;
+                                    }
+
+                                    if (tb.SetGrid4(grid.c_str()) == false)
+                                    {
+                                        cout << "Barfed on setting grid to " << grid.c_str() << endl;
+                                    }
+
+                                    if (tb.SetPowerDbm(power) == false)
+                                    {
+                                        cout << "Barfed on setting power to " << (int)power << endl;
+                                    }
+
+                                    bool decodeOk = tb.Decode();
+
+                                    const char *tbGrid56     = tb.GetGrid56();
+                                    uint16_t    tbAltM       = tb.GetAltitudeMeters();
+                                    int8_t      tbTempC      = tb.GetTemperatureCelsius();
+                                    double      tbVolts      = tb.GetVoltageVolts();
+                                    uint8_t     tbSpeedKnots = tb.GetSpeedKnots();
+                                    bool        tbGpsValid   = tb.GetGpsIsValid();
+
+                                    bool tbOk = true;
+                                    if (decodeOk == false)
+                                    {
+                                        tbOk = false;
+                                        cout << "Decode: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (grid56Decoded != tbGrid56)
+                                    {
+                                        tbOk = false;
+                                        cout << "grid56: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (altMDecoded != tbAltM)
+                                    {
+                                        tbOk = false;
+                                        cout << "altM: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (tempCDecoded != tbTempC)
+                                    {
+                                        tbOk = false;
+                                        cout << "tempC: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (voltageDecoded != tbVolts)
+                                    {
+                                        tbOk = false;
+                                        cout << "voltage: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (speedKnotsDecoded != tbSpeedKnots)
+                                    {
+                                        tbOk = false;
+                                        cout << "speedKnots: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (gpsValidDecoded != tbGpsValid)
+                                    {
+                                        tbOk = false;
+                                        cout << "gpsValid: OH SHITTTTTT" << endl;
+                                    }
+
+                                    if (tbOk == false)
+                                    {
+                                        cout << "Input : " << (int)tempC        << " " << voltage        << " " << (int)speedKnots        << " " << (int)gpsValid        << endl;
+                                        cout << "Output: " << (int)tbTempC << " " << tbVolts << " " << (int)tbSpeedKnots << " " << (int)tbGpsValid << endl;
+                                        cout << endl;
+                                    }
+                                }
+
+
 
 
                                 bool err = false;
