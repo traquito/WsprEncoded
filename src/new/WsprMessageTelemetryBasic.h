@@ -79,7 +79,7 @@ public:
         return retVal;
     }
 
-    uint32_t GetAltitudeMeters() const
+    uint16_t GetAltitudeMeters() const
     {
         return altitudeMeters_;
     }
@@ -190,6 +190,7 @@ public:
         bool retVal = true;
 
         retVal &= DecodeU4BCall();
+        retVal &= DecodeU4BGridPower();
 
         return retVal;
     }
@@ -343,7 +344,7 @@ private:
         buf[1] = g2;
         buf[2] = g3;
         buf[3] = g4;
-        WsprMessageRegularType1::SetGrid(buf);
+        WsprMessageRegularType1::SetGrid4(buf);
 
         // store power
         uint8_t powerDbm = Wspr::GetPowerDbmList()[powerVal];
@@ -416,12 +417,12 @@ private:
     {
         bool retVal = true;
 
-        const char *grid = WsprMessageRegularType1::GetGrid();
+        const char *grid4 = WsprMessageRegularType1::GetGrid4();
 
-        uint8_t g1Val = grid[0] - 'A';
-        uint8_t g2Val = grid[1] - 'A';
-        uint8_t g3Val = grid[2] - '0';
-        uint8_t g4Val = grid[3] - '0';
+        uint8_t g1Val = grid4[0] - 'A';
+        uint8_t g2Val = grid4[1] - 'A';
+        uint8_t g3Val = grid4[2] - '0';
+        uint8_t g4Val = grid4[3] - '0';
         uint8_t powerVal = DecodePowerDbmToNum(WsprMessageRegularType1::GetPowerDbm());
 
         uint32_t val = 0;
@@ -463,7 +464,7 @@ private:
 private:
 
     std::array<char, 3> grid56_;
-    uint32_t            altitudeMeters_;
+    uint16_t            altitudeMeters_;
     int8_t              temperatureCelsius_;
     double              voltageVolts_;
     uint8_t             speedKnots_;
