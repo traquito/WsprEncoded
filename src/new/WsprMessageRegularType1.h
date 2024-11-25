@@ -23,6 +23,8 @@ public:
 
         grid_.Target(gridBuf_, GRID4_LEN + 1);
         grid_.Set("AA00");
+
+        powerDbm_ = 0;
     }
 
     bool SetCallsign(const char *callsign)
@@ -145,6 +147,7 @@ private:
     }
 
 
+
 private:
 
     static const uint8_t CALLSIGN_LEN_MAX = 6;
@@ -156,6 +159,6 @@ private:
     char gridBuf_[GRID4_LEN + 1];
     WsprUtl::CString grid_;
 
-    uint8_t powerDbm_ = 0;
+    uint8_t powerDbm_;
 };
 

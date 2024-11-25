@@ -1,3 +1,6 @@
+add_executable(TestWsprEncoded TestWsprEncoded.cpp)
+target_include_directories(TestWsprEncoded PRIVATE .)
+
 add_executable(TestWspr TestWspr.cpp)
 target_include_directories(TestWspr PRIVATE .)
 add_test(NAME TestWspr COMMAND TestWspr)
@@ -12,6 +15,10 @@ add_executable(TestWsprMessageRegularType1 TestWsprMessageRegularType1.cpp)
 target_include_directories(TestWsprMessageRegularType1 PRIVATE .)
 add_test(NAME TestWsprMessageRegularType1 COMMAND TestWsprMessageRegularType1)
 target_compile_features(TestWsprMessageRegularType1 PRIVATE cxx_std_20)
+
+add_executable(TestWsprMessageTelemetryBasic TestWsprMessageTelemetryBasic.cpp)
+target_include_directories(TestWsprMessageTelemetryBasic PRIVATE .)
+add_test(NAME TestWsprMessageTelemetryBasic COMMAND TestWsprMessageTelemetryBasic)
 
 add_executable(TestWsprUtl TestWsprUtl.cpp)
 target_include_directories(TestWsprUtl PRIVATE .)
