@@ -21,8 +21,8 @@ public:
         callsign_.Target(callsignBuf_, CALLSIGN_LEN_MAX + 1);
         callsign_.Set("0A0AAA");
 
-        grid_.Target(gridBuf_, GRID4_LEN + 1);
-        grid_.Set("AA00");
+        grid4_.Target(grid4Buf_, GRID4_LEN + 1);
+        grid4_.Set("AA00");
 
         powerDbm_ = 0;
     }
@@ -46,13 +46,13 @@ public:
         return callsign_.Get();
     }
     
-    bool SetGrid(const char *grid)
+    bool SetGrid4(const char *grid4)
     {
         bool retVal = false;
 
-        if (Grid4IsValid(grid))
+        if (Grid4IsValid(grid4))
         {
-            grid_.Set(grid);
+            grid4_.Set(grid4);
 
             retVal = true;
         }
@@ -60,9 +60,9 @@ public:
         return retVal;
     }
 
-    const char *GetGrid() const
+    const char *GetGrid4() const
     {
-        return grid_.Get();
+        return grid4_.Get();
     }
 
     bool SetPowerDbm(uint8_t powerDbm)
@@ -118,20 +118,20 @@ private:
         return retVal;
     }
 
-    static bool Grid4IsValid(const char *grid)
+    static bool Grid4IsValid(const char *grid4)
     {
         bool retVal = false;
 
-        if (grid)
+        if (grid4)
         {
-            size_t len = strlen(grid);
+            size_t len = strlen(grid4);
 
             if (len == GRID4_LEN)
             {
-                char g1 = grid[0];
-                char g2 = grid[1];
-                char g3 = grid[2];
-                char g4 = grid[3];
+                char g1 = grid4[0];
+                char g2 = grid4[1];
+                char g3 = grid4[2];
+                char g4 = grid4[3];
 
                 if ('A' <= g1 && g1 <= 'R' &&
                     'A' <= g2 && g2 <= 'R' &&
@@ -156,8 +156,8 @@ private:
     WsprUtl::CString callsign_;
 
     static const uint8_t GRID4_LEN = 4;
-    char gridBuf_[GRID4_LEN + 1];
-    WsprUtl::CString grid_;
+    char grid4Buf_[GRID4_LEN + 1];
+    WsprUtl::CString grid4_;
 
     uint8_t powerDbm_;
 };

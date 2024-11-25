@@ -69,7 +69,7 @@ bool TestGrid()
     for (const auto &test : testList)
     {
         WsprMessageRegularType1 msg;
-        retVal &= CheckErr(test, msg.SetGrid(test.input.c_str()));
+        retVal &= CheckErr(test, msg.SetGrid4(test.input.c_str()));
     }
     for (const auto &test : testList)
     {
