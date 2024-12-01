@@ -264,8 +264,6 @@ private:
 
     void EncodeCallsign()
     {
-        std::string callsign;
-
         // pick apart inputs
         char grid5 = grid56_[0];
         char grid6 = grid56_[1];
