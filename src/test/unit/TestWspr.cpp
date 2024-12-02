@@ -9,10 +9,6 @@ using namespace TestUtl;
 #include "Wspr.h"
 
 
-#include "../WSPR.h"
-
-
-
 bool TestGetBandDataList()
 {
     bool retVal = Wspr::GetBandDataList().size() != 0;
@@ -40,14 +36,6 @@ bool TestGetDialFreqFromBandStr()
     for (const auto &test : testList)
     {
         retVal &= CheckErr(test, Wspr::GetDialFreqFromBandStr(test.input));
-    }
-    for (const auto &test : testList)
-    {
-        // ignore null, string is known to not support this
-        if (test.input != nullptr)
-        {
-            retVal &= CheckErr(test, WSPR::GetDialFreqFromBandStr(test.input));
-        }
     }
 
     cout << "TestGetDialFreqFromBandStr test: " << retVal << endl;
@@ -77,10 +65,6 @@ bool TestPowerDbmInSet()
     for (const auto &test : testList)
     {
         retVal &= CheckErr(test, Wspr::PowerDbmInSet(test.input));
-    }
-    for (const auto &test : testList)
-    {
-        retVal &= CheckErr(test, WSPR::PowerDbmInSet(test.input));
     }
 
     cout << "TestPowerDbmInSet test: " << retVal << endl;

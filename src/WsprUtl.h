@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <cctype>
 
 
 namespace WsprUtl
@@ -52,7 +53,7 @@ public:
             char *p = buf_;
             while (*p != '\0')
             {
-                *p = toupper(*p);
+                *p = std::toupper(*p);
                 ++p;
             }
         }

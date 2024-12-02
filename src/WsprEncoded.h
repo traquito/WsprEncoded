@@ -1,6 +1,6 @@
 #pragma once
 
-
-#include "WSPR.h"
-#include "WSPRMessage.h"
-#include "WSPRMessageU4B.h"
+#include "Wspr.h"
+#include "WsprChannelMap.h"
+#include "WsprMessageRegularType1.h"
+#include "WsprMessageTelemetryBasic.h"

@@ -8,7 +8,6 @@ using namespace std;
 using namespace TestUtl;
 
 #include "WsprMessageRegularType1.h"
-#include "../WSPRMessage.h"
 
 
 bool TestCall()
@@ -29,12 +28,6 @@ bool TestCall()
     for (const auto &test : testList)
     {
         WsprMessageRegularType1 msg;
-        retVal &= CheckErr(test, msg.SetCallsign(test.input.c_str()));
-    }
-
-    for (const auto &test : testList)
-    {
-        WSPRMessage msg;
         retVal &= CheckErr(test, msg.SetCallsign(test.input.c_str()));
     }
 
@@ -71,11 +64,6 @@ bool TestGrid()
         WsprMessageRegularType1 msg;
         retVal &= CheckErr(test, msg.SetGrid4(test.input.c_str()));
     }
-    for (const auto &test : testList)
-    {
-        WSPRMessage msg;
-        retVal &= CheckErr(test, msg.SetGrid(test.input.c_str()));
-    }
 
     cout << "Grid test: " << retVal << endl;
 
@@ -96,11 +84,6 @@ bool TestPower()
     for (const auto &test : testList)
     {
         WsprMessageRegularType1 msg;
-        retVal &= CheckErr(test, msg.SetPowerDbm(test.input));
-    }
-    for (const auto &test : testList)
-    {
-        WSPRMessage msg;
         retVal &= CheckErr(test, msg.SetPowerDbm(test.input));
     }
 

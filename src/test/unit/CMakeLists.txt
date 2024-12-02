@@ -1,0 +1,20 @@
+set(
+    SOURCE_LIST
+
+    TestWSPRMessageU4B.cpp
+
+    TestWspr.cpp
+    TestWsprChannelMap.cpp
+    TestWsprMessageRegularType1.cpp
+    TestWsprMessageTelemetryBasic.cpp
+    TestWsprUtl.cpp
+)
+
+foreach(SOURCE IN LISTS SOURCE_LIST)
+    get_filename_component(TEST_NAME ${SOURCE} NAME_WLE)
+
+    add_executable(${TEST_NAME} ${SOURCE})
+    target_include_directories(${TEST_NAME} PRIVATE ../..)
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+    target_compile_features(${TEST_NAME} PRIVATE cxx_std_20)
+endforeach()
