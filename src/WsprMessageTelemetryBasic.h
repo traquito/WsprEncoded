@@ -4,11 +4,11 @@
 #include <cmath>
 #include <cstring>
 
-#include "WsprMessageRegularType1.h"
+#include "WsprMessageTelemetryCommon.h"
 
 
 class WsprMessageTelemetryBasic
-: public WsprMessageRegularType1
+: public WsprMessageTelemetryCommon
 {
 public:
 
@@ -19,7 +19,7 @@ public:
 
     void Reset()
     {
-        WsprMessageRegularType1::Reset();
+        WsprMessageTelemetryCommon::Reset();
 
         grid56_             = { "AA" };
         altitudeMeters_     = 0;
@@ -27,14 +27,13 @@ public:
         voltageVolts_       = 3.3;
         speedKnots_         = 0;
         gpsIsValid_         = false;
-
-        id13_ = { "00" };
     }
 
     /////////////////////////////////////////////////////////////////
     // Telemetry Setter / Getter Interface
     /////////////////////////////////////////////////////////////////
 
+    // A through X for each char
     bool SetGrid56(const char *grid56)
     {
         bool retVal = false;
@@ -62,11 +61,13 @@ public:
         return retVal;
     }
 
+    // A through X for each char
     const char *GetGrid56() const
     {
         return (const char *)grid56_.data();
     }
 
+    // 0 through 21,340, steps of 20
     bool SetAltitudeMeters(int32_t altitudeMeters)
     {
         bool retVal = true;
@@ -79,11 +80,13 @@ public:
         return retVal;
     }
 
+    // 0 through 21,340, steps of 20
     uint16_t GetAltitudeMeters() const
     {
         return altitudeMeters_;
     }
 
+    // -50 through 39
     bool SetTemperatureCelsius(int32_t temperatureCelsius)
     {
         bool retVal = true;
@@ -96,11 +99,13 @@ public:
         return retVal;
     }
 
+    // -50 through 39
     int8_t GetTemperatureCelsius() const
     {
         return temperatureCelsius_;
     }
 
+    // 3.0v through 4.95v, steps of 0.05v
     bool SetVoltageVolts(double voltageVolts)
     {
         bool retVal = true;
@@ -113,11 +118,13 @@ public:
         return retVal;
     }
 
+    // 3.0v through 4.95v, steps of 0.05v
     double GetVoltageVolts() const
     {
         return voltageVolts_;
     }
 
+    // 0 through 82, steps of 2
     bool SetSpeedKnots(int32_t speedKnots)
     {
         bool retVal = true;
@@ -130,6 +137,7 @@ public:
         return retVal;
     }
 
+    // 0 through 82, steps of 2
     uint8_t GetSpeedKnots() const
     {
         return speedKnots_;
@@ -152,32 +160,6 @@ public:
     // Encode / Decode Interface
     /////////////////////////////////////////////////////////////////
 
-    bool SetId13(const char *id13)
-    {
-        bool retVal = false;
-
-        if (strlen(id13) == 2)
-        {
-            char id1 = id13[0];
-            char id3 = id13[1];
-
-            if ((id1 == '0' || id1 == '1' || id1 == 'Q') &&
-               ('0' <= id3 && id3 <= '9'))
-            {
-                id13_[0] = id1;
-                id13_[1] = id3;
-
-                retVal = true;
-            }
-        }
-
-        return retVal;
-    }
-
-    const char *GetId13() const
-    {
-        return (const char *)id13_.data();
-    }
 
     void Encode()
     {
@@ -194,7 +176,6 @@ public:
 
         return retVal;
     }
-
 
 private:
 
@@ -296,9 +277,9 @@ private:
         // store callsign
         static const uint8_t CALLSIGN_LEN = 6;
         char buf[CALLSIGN_LEN + 1] = { 0 };
-        buf[0] = id13_[0];
+        buf[0] = GetId13()[0];
         buf[1] = id2;
-        buf[2] = id13_[1];
+        buf[2] = GetId13()[1];
         buf[3] = id4;
         buf[4] = id5;
         buf[5] = id6;
@@ -467,7 +448,5 @@ private:
     double              voltageVolts_;
     uint8_t             speedKnots_;
     bool                gpsIsValid_;
-
-    std::array<char, 3> id13_;
 };
 

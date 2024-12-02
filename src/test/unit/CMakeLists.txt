@@ -1,11 +1,8 @@
-set(
-    SOURCE_LIST
-
-    TestWSPRMessageU4B.cpp
-
+set(SOURCE_LIST
     TestWspr.cpp
     TestWsprChannelMap.cpp
     TestWsprMessageRegularType1.cpp
+    TestWsprMessageTelemetryCommon.cpp
     TestWsprMessageTelemetryBasic.cpp
     TestWsprUtl.cpp
 )

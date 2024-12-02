@@ -12,7 +12,9 @@ using namespace TestUtl;
 
 bool TestCall()
 {
-    vector<InputTest<string, bool>> testList = {
+    vector<InputTest<const char *, bool>> testList = {
+        { nullptr,      false,  "nullptr",                                              },
+        { "",           false,  "empty string",                                         },
         { "K1J",        false,  "too short",                                            },
         { "K1JT",       true,   "valid",                                                },
         { "K1JT2",      true,   "invalid format but right len (we don't check format)", },
@@ -28,7 +30,7 @@ bool TestCall()
     for (const auto &test : testList)
     {
         WsprMessageRegularType1 msg;
-        retVal &= CheckErr(test, msg.SetCallsign(test.input.c_str()));
+        retVal &= CheckErr(test, msg.SetCallsign(test.input));
     }
 
     cout << "Call test: " << retVal << endl;
@@ -38,7 +40,9 @@ bool TestCall()
 
 bool TestGrid()
 {
-    vector<InputTest<string, bool>> testList = {
+    vector<InputTest<const char *, bool>> testList = {
+        { nullptr,     false, "nullptr",        },
+        { "",          false, "empty string",   },
         { "F",         false, "too short",      },
         { " F",        false, "padded",         },
         { "F ",        false, "padded",         },
@@ -62,7 +66,7 @@ bool TestGrid()
     for (const auto &test : testList)
     {
         WsprMessageRegularType1 msg;
-        retVal &= CheckErr(test, msg.SetGrid4(test.input.c_str()));
+        retVal &= CheckErr(test, msg.SetGrid4(test.input));
     }
 
     cout << "Grid test: " << retVal << endl;
