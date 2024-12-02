@@ -87,22 +87,22 @@ public:
 
 private:
 
-    static bool CallsignIsValid(const char *inputCallsign)
+    static bool CallsignIsValid(const char *callsign)
     {
         bool retVal = false;
 
         // pointer not null
-        if (inputCallsign)
+        if (callsign)
         {
             // temporary copy of string
-            size_t len = strlen(inputCallsign);
+            size_t len = strlen(callsign);
             char buf[len + 1];
-            WsprUtl::CString callsign((char *)buf, len + 1);
-            callsign.Set(inputCallsign);
+            WsprUtl::CString callsignCheck((char *)buf, len + 1);
+            callsignCheck.Set(callsign);
 
-            bool isPaddedLeft  = callsign.IsPaddedLeft();
-            bool isPaddedRight = callsign.IsPaddedRight();
-            bool isUppercase   = callsign.IsUppercase();
+            bool isPaddedLeft  = callsignCheck.IsPaddedLeft();
+            bool isPaddedRight = callsignCheck.IsPaddedRight();
+            bool isUppercase   = callsignCheck.IsUppercase();
 
             // check criteria
             if (isPaddedLeft == false &&

@@ -63,15 +63,15 @@ public:
         uint32_t      freqDial = 14095600ULL;
     };
 
-    static ChannelDetails GetChannelDetails(const char *bandStr, uint16_t channelIn)
+    static ChannelDetails GetChannelDetails(const char *band, uint16_t channel)
     {
-        bandStr   = Wspr::GetDefaultBandIfNotValid(bandStr);
-        channelIn = GetDefaultChannelIfNotValid(channelIn);
+        band    = Wspr::GetDefaultBandIfNotValid(band);
+        channel = GetDefaultChannelIfNotValid(channel);
 
         std::array<char, 3>  id1List = { '0', '1', 'Q' };
         std::array<char, 10> id3List = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-        uint32_t dialFreq = Wspr::GetDialFreqFromBandStr(bandStr);
+        uint32_t dialFreq = Wspr::GetDialFreqFromBandStr(band);
 
         uint32_t freqTxLow = dialFreq + 1500 - 100;
         uint32_t freqTxHigh = dialFreq + 1500 + 100;
@@ -82,7 +82,7 @@ public:
 
         std::array<uint8_t, 4> freqBandList = { 1, 2, 4, 5 };    // skip middle band 3, but really label as 1,2,3,4
 
-        std::array<uint8_t, 5> minuteList = GetMinuteListForBand(bandStr);
+        std::array<uint8_t, 5> minuteList = GetMinuteListForBand(band);
 
         uint8_t rowCount = 0;
         for (auto freqBand : freqBandList)
@@ -108,13 +108,13 @@ public:
 
                     for (char id3 : id3List)
                     {
-                        uint16_t channel = id1Offset + (colCount * rowsPerCol) + rowCount;
+                        uint16_t channelCalc = id1Offset + (colCount * rowsPerCol) + rowCount;
 
-                        if (channel == channelIn)
+                        if (channelCalc == channel)
                         {
                             ChannelDetails cd;
-                            cd.band       = bandStr;
-                            cd.channel    = channel;
+                            cd.band       = band;
+                            cd.channel    = channelCalc;
                             cd.id1        = id1;
                             cd.id3        = id3;
                             cd.id13[0]    = id1;
