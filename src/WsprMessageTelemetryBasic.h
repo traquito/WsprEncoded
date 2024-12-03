@@ -21,7 +21,7 @@ public:
     {
         WsprMessageTelemetryCommon::Reset();
 
-        grid56_             = { "AA" };
+        grid56_             = std::array<char, 3>{ "AA" };
         altitudeMeters_     = 0;
         temperatureCelsius_ = 0;
         voltageVolts_       = 3.3;

@@ -20,7 +20,7 @@ public:
     {
         WsprMessageRegularType1::Reset();
 
-        id13_ = { "00" };
+        id13_ = std::array<char, 3>{ "00" };
     }
 
     // 00 through 09, 10 through 19, Q0 through Q9
