@@ -33,7 +33,7 @@ public:
     // Telemetry Setter / Getter Interface
     /////////////////////////////////////////////////////////////////
 
-    // A through X for each char
+    // 'A' through 'X' for each char
     bool SetGrid56(const char *grid56)
     {
         bool retVal = false;

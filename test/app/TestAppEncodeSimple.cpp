@@ -32,8 +32,8 @@ int main()
     // Extract the encoded WSPR fields
     cout << "Encoded data" << endl;
     cout << "------------" << endl;
-    cout << "Callsign: "<< tb.GetCallsign() << endl;
-    cout << "Grid4   : "<< tb.GetGrid4()    << endl;
+    cout << "Callsign: "<< tb.GetCallsign()      << endl;
+    cout << "Grid4   : "<< tb.GetGrid4()         << endl;
     cout << "PowerDbm: "<< (int)tb.GetPowerDbm() << endl;
 
     return 0;

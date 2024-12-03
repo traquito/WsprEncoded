@@ -46,6 +46,8 @@ public:
         return callsign_.Get();
     }
     
+    // 'A' through 'X' for chars 1 and 2
+    // '0' through '9' for chars 3 and 4
     bool SetGrid4(const char *grid4)
     {
         bool retVal = false;
@@ -60,11 +62,14 @@ public:
         return retVal;
     }
 
+    // 'A' through 'X' for chars 1 and 2
+    // '0' through '9' for chars 3 and 4
     const char *GetGrid4() const
     {
         return grid4_.Get();
     }
 
+    // 0,  3,  7, 10, 13, 17, 20, 23, 27, 30, 33, 37, 40, 43, 47, 50, 53, 57, 60
     bool SetPowerDbm(uint8_t powerDbm)
     {
         bool retVal = false;
@@ -79,6 +84,7 @@ public:
         return retVal;
     }
 
+    // 0,  3,  7, 10, 13, 17, 20, 23, 27, 30, 33, 37, 40, 43, 47, 50, 53, 57, 60
     uint8_t GetPowerDbm() const
     {
         return powerDbm_;
