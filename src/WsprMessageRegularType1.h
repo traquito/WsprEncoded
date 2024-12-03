@@ -96,7 +96,7 @@ private:
         {
             // temporary copy of string
             size_t len = strlen(callsign);
-            char buf[len + 1];
+            char buf[len + 1] = { 0 };
             WsprUtl::CString callsignCheck((char *)buf, len + 1);
             callsignCheck.Set(callsign);
 

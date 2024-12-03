@@ -21,19 +21,19 @@ struct ParamPackOperations
     struct OpDef
     {
         string op;
-        string arg;
+        string arg = "";
     };
 
     vector<OpDef> opDefList;
 };
 
 template <typename T>
-bool DoOperationsTest(string testName, vector<T> &testList)
+bool DoOperationsTest(const string &testName, vector<T> &testList)
 {
     bool retVal = true;
     for (auto &test : testList)
     {
-        CString cs((const char *)test.input.arr.data(), CAPACITY);
+        CString cs(reinterpret_cast<const char *>(test.input.arr.data()), CAPACITY);
 
         for (const auto &opDef : test.input.opDefList)
         {
@@ -317,16 +317,16 @@ struct ParamPackBool
     array<char, CAPACITY> arr;
 
     string op;
-    const char *cStr;
+    const char *cStr = "";
 };
 
 template <typename T>
-bool DoCStringBoolTest(string testName, vector<T> &testList)
+bool DoCStringBoolTest(const string &testName, vector<T> &testList)
 {
     bool retVal = true;
     for (auto &test : testList)
     {
-        CString cs((const char *)test.input.arr.data(), CAPACITY);
+        CString cs(reinterpret_cast<const char *>(test.input.arr.data()), CAPACITY);
 
         if (test.input.op == "ispaddedleft")
         {
@@ -446,7 +446,7 @@ bool TestRotation()
 }
 
 
-int main(int argc, char *argv[])
+int main()
 {
     bool retVal = true;
 

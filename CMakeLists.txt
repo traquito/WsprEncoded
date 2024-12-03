@@ -5,8 +5,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "-Wall -Werror -Wextra -Wsuggest-override")
 
-project(Structure LANGUAGES CXX)
+project(WsprEncoded LANGUAGES CXX)
+
+include(cppcheck.cmake)
 
 include(CTest)
 enable_testing()

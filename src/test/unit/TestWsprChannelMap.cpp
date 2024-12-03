@@ -78,7 +78,7 @@ bool TestGetDefaultChannelIfNotValid()
     return retVal;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     bool retVal = true;
 

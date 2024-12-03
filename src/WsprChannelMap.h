@@ -15,7 +15,7 @@ public:
     {
         uint16_t retVal = 0;
 
-        if (0 <= channel && channel <= 599)
+        if (channel <= 599)
         {
             retVal = channel;
         }

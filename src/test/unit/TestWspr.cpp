@@ -72,7 +72,7 @@ bool TestPowerDbmInSet()
     return retVal;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     bool retVal = true;
 
