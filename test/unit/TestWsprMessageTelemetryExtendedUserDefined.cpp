@@ -2,6 +2,9 @@
 #include <vector>
 using namespace std;
 
+#include "TestUtl.h"
+using namespace TestUtl;
+
 #include "WsprMessageTelemetryExtendedUserDefined.h"
 
 
@@ -25,7 +28,6 @@ void Print(const string &header, T &msg, const vector<const char *> &fieldNameLi
 
     cout << endl;
 }
-
 
 struct FieldData
 {
@@ -71,7 +73,7 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     fieldNameList.push_back("HdrTelemetryType");
 
     // create message holding max field count possible
-    WsprMessageTelemetryExtendedUserDefined<29> msg;
+    WsprMessageTelemetryExtendedUserDefined msg;
 
     // define fields
     for (const auto &fd : test.fieldDataList)
@@ -87,23 +89,22 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
         msg.Set(fd.name, fd.value);
     }
 
-
     // encode
     msg.SetId13(test.id13);
-    msg.Set("HdrSlot", test.hdrSlot);
-    Print("After Setting", msg, fieldNameList);
+    msg.SetHdrSlot(test.hdrSlot);
+    // Print("After Setting", msg, fieldNameList);
     msg.Encode();
 
-    cout << endl;
-    Print("After Encode", msg, fieldNameList);
+    // cout << endl;
+    // Print("After Encode", msg, fieldNameList);
 
     // copy encoded values
     string  callsign = msg.GetCallsign();
     string  grid4    = msg.GetGrid4();
     uint8_t powerDbm = msg.GetPowerDbm();
 
-    cout << callsign << " " << grid4 << " " << (int)powerDbm << endl;
-    cout << endl;
+    // cout << callsign << " " << grid4 << " " << (int)powerDbm << endl;
+    // cout << endl;
 
     // check encode worked as expected
     if (callsign != test.wspr.callsign)
@@ -123,7 +124,7 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     }
 
     // take a copy before reset for field values
-    WsprMessageTelemetryExtendedUserDefined<29> msgOld = msg;
+    WsprMessageTelemetryExtendedUserDefined msgOld = msg;
 
     // reset
     msg.Reset();
@@ -140,32 +141,29 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     msg.Decode();
 
     // cout << endl;
-    Print("After Decode", msg, fieldNameList);
+    // Print("After Decode", msg, fieldNameList);
 
     // compare decoded values to the values as they were going into Encode
     // this includes application fields and headers
     for (const auto &fieldName : fieldNameList)
     {
-        double valOld = -INFINITY;
-        msgOld.Get(fieldName, valOld);
+        double valOld = msgOld.Get(fieldName);
 
-        double valNew = INFINITY;
-        msg.Get(fieldName, valNew);
+        double valNew = msg.Get(fieldName);
 
-        if (valNew != valOld)
+        if (valNew != valOld || valOld == NAN || valNew == NAN)
         {
             retVal = false;
 
-            cout << "Field " << fieldName << " decoded value " << valNew << " isn't the same as what went into encoding (" << valOld << ")" << endl;
+            // cout << "Field " << fieldName << " decoded value " << valNew << " isn't the same as what went into encoding (" << valOld << ")" << endl;
         }
     }
 
-    cout << "DoTestEncodeDecode: " << retVal << endl;
-    cout << endl;
+    // cout << "DoTestEncodeDecode: " << retVal << endl;
+    // cout << endl;
 
     return retVal;
 }
-
 
 bool TestEncodeDecode()
 {
@@ -180,21 +178,21 @@ bool TestEncodeDecode()
             { "GpsIsValid",    0,     1,     1,       -1 },
         },  { "000AAA", "DN36", 53 }},
 
-        {   "11", 0, {
+        {   "11", 1, {
             { "Altitude",      0, 21340,    20,    15000 },
             { "Temperature", -50,    39,     1,       22 },
             { "Voltage",       3,     4.95,  0.05,  3.15 },
             { "Speed",         0,    82,     2,       40 },
             { "GpsIsValid",    0,     1,     1,        1 },
-        },  { "1B1HTD", "DF09", 3 }},
+        },  { "1B1HTD", "DF09", 30 }},
 
-        {   "Q2", 0, {
+        {   "Q2", 2, {
             { "Altitude",      0, 21340,    20,    22000 },
             { "Temperature", -50,    39,     1,       45 },
             { "Voltage",       3,     4.95,  0.05,  5.15 },
             { "Speed",         0,    82,     2,       95 },
             { "GpsIsValid",    0,     1,     1,        2 },
-        },  { "QF2HJF", "GL09", 57 }},
+        },  { "QF2HJF", "GL10", 47 }},
     };
 
     for (const auto &test : testList)
@@ -207,9 +205,352 @@ bool TestEncodeDecode()
     return retVal;
 }
 
+bool TestBits()
+{
+    vector<InputTest<vector<FieldData>, bool>> testList = {
+        {{
+            }, true, "no fields",
+        },
+        {
+            {
+                { "F1", 0, 1, 1 },
+            },
+            true, "1 field, 1 bit",
+        },
+        {
+            {
+                { "F1", 0, 759250123, 1 },
+            },
+            true, "1 field, 29.4999... bits (max val)",
+        },
+        {
+            {
+                { "F1", 0, 759250124, 1 },
+            },
+            false, "1 field, 29.5 bits (max val + 1)",
+        },
+        {
+            {
+                { "Altitude",      0, 21340,    20,    },
+                { "Temperature", -50,    39,     1,    },
+                { "Voltage",       3,     4.95,  0.05, },
+                { "Speed",         0,    82,     2,    },
+                { "GpsIsValid",    0,     1,     1,    },
+            },
+            true, "multiple fields that should fit",
+        },
+        {
+            {
+                { "F1", 0, 1, 1 },
+                { "F2", 0, 1, 1 },
+                { "F3", 0, 1, 1 },
+                { "F4", 0, 1, 1 },
+                { "F5", 0, 1, 1 },
+                { "F6", 0, 1, 1 },
+                { "F7", 0, 1, 1 },
+                { "F8", 0, 1, 1 },
+                { "F9", 0, 1, 1 },
+                { "F10", 0, 1, 1 },
+                { "F11", 0, 1, 1 },
+                { "F12", 0, 1, 1 },
+                { "F13", 0, 1, 1 },
+                { "F14", 0, 1, 1 },
+                { "F15", 0, 1, 1 },
+                { "F16", 0, 1, 1 },
+                { "F17", 0, 1, 1 },
+                { "F18", 0, 1, 1 },
+                { "F19", 0, 1, 1 },
+                { "F20", 0, 1, 1 },
+                { "F21", 0, 1, 1 },
+                { "F22", 0, 1, 1 },
+                { "F23", 0, 1, 1 },
+                { "F24", 0, 1, 1 },
+                { "F25", 0, 1, 1 },
+                { "F26", 0, 1, 1 },
+                { "F27", 0, 1, 1 },
+                { "F28", 0, 1, 1 },
+                { "F29", 0, 1, 1 },
+            },
+            true, "29 1-bit fields that should fit",
+        },
+        {
+            {
+                { "F1", 0, 1, 1 },
+                { "F2", 0, 1, 1 },
+                { "F3", 0, 1, 1 },
+                { "F4", 0, 1, 1 },
+                { "F5", 0, 1, 1 },
+                { "F6", 0, 1, 1 },
+                { "F7", 0, 1, 1 },
+                { "F8", 0, 1, 1 },
+                { "F9", 0, 1, 1 },
+                { "F10", 0, 1, 1 },
+                { "F11", 0, 1, 1 },
+                { "F12", 0, 1, 1 },
+                { "F13", 0, 1, 1 },
+                { "F14", 0, 1, 1 },
+                { "F15", 0, 1, 1 },
+                { "F16", 0, 1, 1 },
+                { "F17", 0, 1, 1 },
+                { "F18", 0, 1, 1 },
+                { "F19", 0, 1, 1 },
+                { "F20", 0, 1, 1 },
+                { "F21", 0, 1, 1 },
+                { "F22", 0, 1, 1 },
+                { "F23", 0, 1, 1 },
+                { "F24", 0, 1, 1 },
+                { "F25", 0, 1, 1 },
+                { "F26", 0, 1, 1 },
+                { "F27", 0, 1, 1 },
+                { "F28", 0, 1, 1 },
+                { "F29", 0, 1, 1 },
+                { "F30", 0, 1, 1 },
+            },
+            false, "30 1-bit fields should not fit",
+        },
+    };
+
+    bool retVal = true;
+
+    for (const auto &test : testList)
+    {
+        WsprMessageTelemetryExtendedUserDefined msg;
+
+        bool ok = true;
+
+        for (const auto &fd : test.input)
+        {
+            ok &= msg.DefineField(fd.name, fd.lowValue, fd.highValue, fd.stepSize);
+        }
+
+        retVal &= CheckErr(test, ok);
+    }
+
+    cout << "TestBits: " << retVal << endl;
+
+    return retVal;
+}
+
+
+bool TestReset()
+{
+    bool retVal = true;
+
+    WsprMessageTelemetryExtendedUserDefined msg;
+
+    msg.DefineField("ABC", 0, 1, 1);
+
+    double valIn = 1;
+    msg.Set("ABC", valIn);
+
+    double valOut = msg.Get("ABC");
+
+    msg.Reset();
+
+    double valOutAfter = msg.Get("ABC");
+
+    retVal = valIn  == valOut &&
+             valOut != valOutAfter;
+
+    cout << "TestReset: " << retVal << endl;
+
+    return retVal;
+}
+
+bool TestResetEverything()
+{
+    bool retVal = true;
+
+    WsprMessageTelemetryExtendedUserDefined msg;
+
+    // define field, should be ok to set/get
+    bool def1 = msg.DefineField("ABC", 0, 2, 1);
+
+    // set should work
+    double valIn = 1;
+    bool set1 = msg.Set("ABC", valIn);
+
+    // get should work
+    double valOut = msg.Get("ABC");
+
+    // should clobber all field defs and ability to set/get field values
+    msg.ResetEverything();
+
+    // try to get a field, should be NAN
+    double valOutAfter = msg.Get("ABC");
+
+    // try to set a field, should be false return value
+    double valIn2Ok = msg.Set("ABC", 2);
+
+    // 2nd def of ABC should work
+    bool def2 = msg.DefineField("ABC", 2, 4, 2);
+
+    // should be default value of lowValue = 2
+    double get2 = msg.Get("ABC");
+
+    // should work
+    bool set2 = msg.Set("ABC", 4);
+
+    // check assumptions
+    retVal = 
+        def1 == true &&
+        set1 == true &&
+        valOut == 1 &&
+        std::isnan(valOutAfter) &&
+        valIn2Ok == false &&
+        def2 == true &&
+        get2 == 2 &&
+        set2 == true;
+
+    cout << "TestResetEverything: " << retVal << endl;
+
+    return retVal;
+}
+
+bool TestDefineSetGetField()
+{
+    vector<InputTest<vector<FieldData>, bool>> testList = {
+        {   {
+            },
+            true, "no fields",
+        },
+        {
+            {
+                { "F1", 0, 1, 1 },
+            },
+            true, "1 field",
+        },
+        {
+            {
+                { "F1", 0, 1, 1 },
+                { "F2", 0, 1, 1 },
+            },
+            true, "2 diff field",
+        },
+        {
+            {
+                { "F1", 0, 1, 1 },
+                { "F2", 0, 1, 1 },
+                { "F1", 0, 1, 1 },
+            },
+            false, "2 same name field with middle unique field",
+        },
+    };
+
+    bool retVal = true;
+
+    for (const auto &test : testList)
+    {
+        WsprMessageTelemetryExtendedUserDefined msg;
+
+        bool ok = true;
+
+        for (const auto &fd : test.input)
+        {
+            ok &= msg.DefineField(fd.name, fd.lowValue, fd.highValue, fd.stepSize);
+        }
+
+        retVal &= CheckErr(test, ok);
+    }
+
+    cout << "TestDefineSetGetField: " << retVal << endl;
+
+    return retVal;
+}
+
+bool TestRawHeaderFields()
+{
+    WsprMessageTelemetryExtendedUserDefined msg;
+
+    vector<const char *> fieldNameCanSetList = {
+        "HdrSlot",
+        "HdrType",
+    };
+
+    vector<const char *> fieldNameCanNotSetList = {
+        "HdrTelemetryType",
+        "HdrRESERVED",
+    };
+
+    vector<const char *> fieldNameCanGetList = {
+        "HdrTelemetryType",
+        "HdrRESERVED",
+        "HdrSlot",
+        "HdrType",
+    };
+
+    // check behavior
+    bool retVal = true;
+
+    // settable fields are gettable
+    for (const char *fieldName : fieldNameCanSetList)
+    {
+        // setting to 1 is within range for all fields, and isn't their default value
+        double setVal = 1;
+        bool setOk = msg.Set(fieldName, setVal);
+
+        // should get 1 back
+        double getVal = msg.Get(fieldName);
+
+        bool ok = setVal == getVal && setOk == true;
+
+        retVal &= ok;
+    }
+
+    // non-settable fields return errors
+    for (const char *fieldName : fieldNameCanNotSetList)
+    {
+        // setting to 1 is within range for all fields, and isn't their default value
+        double setVal = 1;
+
+        // set should fail
+        bool setOk = msg.Set(fieldName, setVal);
+
+        bool ok = setOk == false;
+
+        retVal &= ok;
+    }
+
+    // non-settable fields return errors
+    for (const char *fieldName : fieldNameCanGetList)
+    {
+        // should be able to get a non-NAN value
+        double val = msg.Get(fieldName);
+
+        retVal &= (std::isnan(val) == false);
+    }
+
+    cout << "TestRawHeaderFields: " << retVal << endl;
+
+    return retVal;
+}
+
+bool TestNamedHeaderFields()
+{
+    bool retVal = true;
+
+    WsprMessageTelemetryExtendedUserDefined msg;
+
+    bool setHdrSlot = msg.SetHdrSlot(1);
+    uint8_t getHdrSlot = msg.GetHdrSlot();
+
+    bool setHdrType = msg.SetHdrType(WsprMessageTelemetryExtendedUserDefined<>::HdrType::RESERVED);
+    WsprMessageTelemetryExtendedUserDefined<>::HdrType getHdrType = msg.GetHdrType();
+
+    // check assumptions
+    retVal =
+        setHdrSlot == true &&
+        getHdrSlot == 1 &&
+        setHdrType == true &&
+        getHdrType == WsprMessageTelemetryExtendedUserDefined<>::HdrType::RESERVED;
+
+    cout << "TestNamedHeaderFields: " << retVal << endl;
+
+    return retVal;
+}
+
 
 // Other tests:
-// - field defs failing
 // - field setting/getting failing
 // - etc
 //
@@ -217,29 +558,18 @@ bool TestEncodeDecode()
 // - ie don't have it test for field value clamping
 
 
-// confirm bit sizes are as expected
-// bool TestBits()
-// {
-//     bool retVal = true;
-
-//     return retVal;
-// }
-
-
-void TestSize()
-{
-    cout << "Size of <3> : " << sizeof(WsprMessageTelemetryExtendedUserDefined<3>) << endl;
-    cout << "Size of <29>: " << sizeof(WsprMessageTelemetryExtendedUserDefined<29>) << endl;
-}
 
 int main()
 {
     bool retVal = true;
 
-    // TestSize();
-
-    // retVal &= TestBits();
     retVal &= TestEncodeDecode();
+    retVal &= TestBits();
+    retVal &= TestReset();
+    retVal &= TestResetEverything();
+    retVal &= TestDefineSetGetField();
+    retVal &= TestRawHeaderFields();
+    retVal &= TestNamedHeaderFields();
 
     return !retVal;
 }

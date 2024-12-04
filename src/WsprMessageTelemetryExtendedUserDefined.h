@@ -8,7 +8,8 @@
 #include "WsprMessageTelemetryCommon.h"
 
 
-template <uint8_t FIELD_COUNT>
+// default template param set to max possible field count
+template <uint8_t FIELD_COUNT = 29>
 class WsprMessageTelemetryExtendedUserDefined
 : public WsprMessageTelemetryCommon
 {
@@ -19,7 +20,7 @@ public:
         ResetEverything();
     }
 
-    // just values
+    // reset just values
     void Reset()
     {
         WsprMessageTelemetryCommon::Reset();
@@ -37,7 +38,7 @@ public:
         fieldDefHeaderList_[3].value = 0;
     }
 
-    // wipe out field definitions also
+    // reset field definitions and values
     void ResetEverything()
     {
         WsprMessageTelemetryCommon::Reset();
@@ -86,6 +87,11 @@ public:
             },
         }};
     }
+
+
+    /////////////////////////////////////////////////////////////////
+    // User-Defined Field Definitions, Setters, Getters
+    /////////////////////////////////////////////////////////////////
 
     // Define User-Defined Fields
     bool DefineField(const char *fieldName,
@@ -163,7 +169,7 @@ public:
         return retVal;
     }
 
-    // Set Header and User-Defined Fields
+    // Set User-Defined Field
     bool Set(const char *fieldName, double value)
     {
         bool retVal = true;
@@ -195,23 +201,68 @@ public:
         return retVal;
     }
 
-    // Get Header and User-Defined Fields
-    bool Get(const char *fieldName, double &value)
+    // Get User-Defined Field
+    // Can return NAN (must use std::isnan(), cannot compare via == NAN)
+    double Get(const char *fieldName)
     {
-        bool retVal = false;
+        double retVal = NAN;
 
         if (FieldDefExists(fieldName))
         {
-            retVal = true;
-
             FieldDef &fd = *GetFieldDef(fieldName);
 
-            // set return parameter
-            value = fd.value;
+            retVal = fd.value;
         }
 
         return retVal;
     }
+
+
+    /////////////////////////////////////////////////////////////////
+    // User-Defined Field Definitions, Setters, Getters
+    /////////////////////////////////////////////////////////////////
+
+    bool SetHdrSlot(uint8_t val)
+    {
+        return Set("HdrSlot", val);
+    }
+
+    uint8_t GetHdrSlot()
+    {
+        double val = Get("HdrSlot");
+
+        return (uint8_t)val;
+    }
+
+    enum class HdrType : uint8_t
+    {
+        USER_DEFINED = 0,
+        RESERVED = 15,
+    };
+
+    bool SetHdrType(HdrType val)
+    {
+        return Set("HdrType", (uint8_t)val);
+    }
+
+    HdrType GetHdrType()
+    {
+        HdrType retVal = HdrType::USER_DEFINED;
+
+        double val = Get("HdrType");
+
+        if (val != NAN)
+        {
+            retVal = (HdrType)(uint8_t)val;
+        }
+
+        return retVal;
+    }
+
+
+    /////////////////////////////////////////////////////////////////
+    // Encode / Decode
+    /////////////////////////////////////////////////////////////////
 
     // Encode fields
     void Encode()
@@ -229,12 +280,8 @@ public:
                 // calculate field number for packing
                 uint32_t fieldNumber = (uint32_t)std::round((fd.value - fd.lowValue) / fd.stepSize);
 
-                // cout << "Packing " << fd.name << ", value " << fd.value << " (" << fieldNumber << "), numValues " << fd.numValues << endl;
-
                 // pack
                 val *= fd.numValues; val += fieldNumber;
-
-                // cout << "val now " << val << endl;
             }
         };
 
@@ -292,6 +339,7 @@ public:
         WsprMessageRegularType1::SetPowerDbm(powerDbm);
     }
 
+    // Decode into fields
     void Decode()
     {
         // pull in inputs
@@ -338,8 +386,6 @@ public:
 
                 // set field value
                 fd.value = fd.lowValue + (fieldNumber * fd.stepSize);
-
-                // cout << "Unpacking " << fd.name << ", value " << fd.value << " (" << fieldNumber << ")" << endl;
 
                 // shed
                 val /= fd.numValues;
@@ -437,10 +483,9 @@ private:
         if (fieldName)
         {
             // reject if field name is on the restricted list
-            std::array<const char *, 3> restrictedFieldNameList = {
+            std::array<const char *, 2> restrictedFieldNameList = {
                 "HdrTelemetryType",
                 "HdrRESERVED",
-                "HdrType",
             };
 
             for (const char *restrictedFieldName : restrictedFieldNameList)
