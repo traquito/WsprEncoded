@@ -5,7 +5,7 @@ using namespace std;
 #include "TestUtl.h"
 using namespace TestUtl;
 
-#include "WsprMessageTelemetryExtendedUserDefined.h"
+#include "WsprMessageTelemetryExtendedCommon.h"
 
 
 template <typename T>
@@ -73,7 +73,7 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     fieldNameList.push_back("HdrTelemetryType");
 
     // create message holding max field count possible
-    WsprMessageTelemetryExtendedUserDefined msg;
+    WsprMessageTelemetryExtendedCommon msg;
 
     // define fields
     for (const auto &fd : test.fieldDataList)
@@ -124,7 +124,7 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     }
 
     // take a copy before reset for field values
-    WsprMessageTelemetryExtendedUserDefined msgOld = msg;
+    WsprMessageTelemetryExtendedCommon msgOld = msg;
 
     // reset
     msg.Reset();
@@ -314,7 +314,7 @@ bool TestBits()
 
     for (const auto &test : testList)
     {
-        WsprMessageTelemetryExtendedUserDefined msg;
+        WsprMessageTelemetryExtendedCommon msg;
 
         bool ok = true;
 
@@ -336,7 +336,7 @@ bool TestReset()
 {
     bool retVal = true;
 
-    WsprMessageTelemetryExtendedUserDefined msg;
+    WsprMessageTelemetryExtendedCommon msg;
 
     msg.DefineField("ABC", 0, 1, 1);
 
@@ -361,7 +361,7 @@ bool TestResetEverything()
 {
     bool retVal = true;
 
-    WsprMessageTelemetryExtendedUserDefined msg;
+    WsprMessageTelemetryExtendedCommon msg;
 
     // define field, should be ok to set/get
     bool def1 = msg.DefineField("ABC", 0, 2, 1);
@@ -441,7 +441,7 @@ bool TestDefineSetGetField()
 
     for (const auto &test : testList)
     {
-        WsprMessageTelemetryExtendedUserDefined msg;
+        WsprMessageTelemetryExtendedCommon msg;
 
         bool ok = true;
 
@@ -460,7 +460,7 @@ bool TestDefineSetGetField()
 
 bool TestRawHeaderFields()
 {
-    WsprMessageTelemetryExtendedUserDefined msg;
+    WsprMessageTelemetryExtendedCommon msg;
 
     vector<const char *> fieldNameCanSetList = {
         "HdrSlot",
@@ -529,20 +529,20 @@ bool TestNamedHeaderFields()
 {
     bool retVal = true;
 
-    WsprMessageTelemetryExtendedUserDefined msg;
+    WsprMessageTelemetryExtendedCommon msg;
 
     bool setHdrSlot = msg.SetHdrSlot(1);
     uint8_t getHdrSlot = msg.GetHdrSlot();
 
-    bool setHdrType = msg.SetHdrType(WsprMessageTelemetryExtendedUserDefined<>::HdrType::RESERVED);
-    WsprMessageTelemetryExtendedUserDefined<>::HdrType getHdrType = msg.GetHdrType();
+    bool setHdrType = msg.SetHdrType(WsprMessageTelemetryExtendedCommon<>::HdrType::RESERVED);
+    WsprMessageTelemetryExtendedCommon<>::HdrType getHdrType = msg.GetHdrType();
 
     // check assumptions
     retVal =
         setHdrSlot == true &&
         getHdrSlot == 1 &&
         setHdrType == true &&
-        getHdrType == WsprMessageTelemetryExtendedUserDefined<>::HdrType::RESERVED;
+        getHdrType == WsprMessageTelemetryExtendedCommon<>::HdrType::RESERVED;
 
     cout << "TestNamedHeaderFields: " << retVal << endl;
 

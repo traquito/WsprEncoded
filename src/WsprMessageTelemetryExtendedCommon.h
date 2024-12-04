@@ -10,12 +10,12 @@
 
 // default template param set to max possible field count
 template <uint8_t FIELD_COUNT = 29>
-class WsprMessageTelemetryExtendedUserDefined
+class WsprMessageTelemetryExtendedCommon
 : public WsprMessageTelemetryCommon
 {
 public:
 
-    WsprMessageTelemetryExtendedUserDefined()
+    WsprMessageTelemetryExtendedCommon()
     {
         ResetEverything();
     }

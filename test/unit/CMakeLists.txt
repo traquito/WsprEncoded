@@ -4,7 +4,7 @@ set(SOURCE_LIST
     TestWsprMessageRegularType1.cpp
     TestWsprMessageTelemetryBasic.cpp
     TestWsprMessageTelemetryCommon.cpp
-    TestWsprMessageTelemetryExtendedUserDefined.cpp
+    TestWsprMessageTelemetryExtendedCommon.cpp
     TestWsprUtl.cpp
 )
 
