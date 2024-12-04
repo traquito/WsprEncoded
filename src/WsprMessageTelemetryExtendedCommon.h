@@ -86,6 +86,8 @@ public:
                 .value     = 0, // User-Defined
             },
         }};
+
+        canSetHdrType_ = true;
     }
 
 
@@ -240,23 +242,9 @@ public:
         RESERVED = 15,
     };
 
-    bool SetHdrType(HdrType val)
+    void SetCanSetHdrType(bool val)
     {
-        return Set("HdrType", (uint8_t)val);
-    }
-
-    HdrType GetHdrType()
-    {
-        HdrType retVal = HdrType::USER_DEFINED;
-
-        double val = Get("HdrType");
-
-        if (val != NAN)
-        {
-            retVal = (HdrType)(uint8_t)val;
-        }
-
-        return retVal;
+        canSetHdrType_ = val;
     }
 
 
@@ -483,14 +471,18 @@ private:
         if (fieldName)
         {
             // reject if field name is on the restricted list
-            std::array<const char *, 2> restrictedFieldNameList = {
+            std::array<const char *, 3> restrictedFieldNameListArr = {
                 "HdrTelemetryType",
                 "HdrRESERVED",
+                "HdrType",
             };
 
-            for (const char *restrictedFieldName : restrictedFieldNameList)
+            const char **restrictedFieldNameList = reinterpret_cast<const char **>(restrictedFieldNameListArr.data());
+            int restrictedFieldNameListLen = canSetHdrType_ ? 2 : 3;
+
+            for (int i = 0; i < restrictedFieldNameListLen; ++i)
             {
-                if (strcmp(fieldName, restrictedFieldName) == 0)
+                if (strcmp(fieldName, restrictedFieldNameList[i]) == 0)
                 {
                     retVal = false;
                 }
@@ -519,6 +511,8 @@ private:
 
     // never changes count, but values can change
     std::array<FieldDef, 4> fieldDefHeaderList_;
+
+    bool canSetHdrType_;
 };
 
 

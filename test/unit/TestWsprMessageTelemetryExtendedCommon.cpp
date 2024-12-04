@@ -458,27 +458,11 @@ bool TestDefineSetGetField()
     return retVal;
 }
 
-bool TestRawHeaderFields()
+bool TestRawHeaderFields(WsprMessageTelemetryExtendedCommon<> &msg,
+                         const vector<const char *>           &fieldNameCanSetList,
+                         const vector<const char *>           &fieldNameCanNotSetList,
+                         const vector<const char *>           &fieldNameCanGetList)
 {
-    WsprMessageTelemetryExtendedCommon msg;
-
-    vector<const char *> fieldNameCanSetList = {
-        "HdrSlot",
-        "HdrType",
-    };
-
-    vector<const char *> fieldNameCanNotSetList = {
-        "HdrTelemetryType",
-        "HdrRESERVED",
-    };
-
-    vector<const char *> fieldNameCanGetList = {
-        "HdrTelemetryType",
-        "HdrRESERVED",
-        "HdrSlot",
-        "HdrType",
-    };
-
     // check behavior
     bool retVal = true;
 
@@ -520,7 +504,73 @@ bool TestRawHeaderFields()
         retVal &= (std::isnan(val) == false);
     }
 
-    cout << "TestRawHeaderFields: " << retVal << endl;
+    return retVal;
+}
+
+bool TestRawHeaderFieldsHdrTypeSettable()
+{
+    vector<const char *> fieldNameCanSetList = {
+        "HdrSlot",
+        "HdrType",
+    };
+
+    vector<const char *> fieldNameCanNotSetList = {
+        "HdrTelemetryType",
+        "HdrRESERVED",
+    };
+
+    vector<const char *> fieldNameCanGetList = {
+        "HdrTelemetryType",
+        "HdrRESERVED",
+        "HdrSlot",
+        "HdrType",
+    };
+
+    WsprMessageTelemetryExtendedCommon msg;
+
+    bool retVal = true;
+
+    retVal &= TestRawHeaderFields(msg,
+                                  fieldNameCanSetList,
+                                  fieldNameCanNotSetList,
+                                  fieldNameCanGetList);
+
+    cout << "TestRawHeaderFieldsHdrTypeSettable: " << retVal << endl;
+
+    return retVal;
+}
+
+bool TestRawHeaderFieldsHdrTypeNotSettable()
+{
+    vector<const char *> fieldNameCanSetList = {
+        "HdrSlot",
+    };
+
+    vector<const char *> fieldNameCanNotSetList = {
+        "HdrTelemetryType",
+        "HdrRESERVED",
+        "HdrType",
+    };
+
+    vector<const char *> fieldNameCanGetList = {
+        "HdrTelemetryType",
+        "HdrRESERVED",
+        "HdrSlot",
+        "HdrType",
+    };
+
+    WsprMessageTelemetryExtendedCommon msg;
+
+    msg.SetCanSetHdrType(false);
+
+    bool retVal = true;
+
+    retVal &= TestRawHeaderFields(msg,
+                                  fieldNameCanSetList,
+                                  fieldNameCanNotSetList,
+                                  fieldNameCanGetList);
+
+    cout << "TestRawHeaderFieldsHdrTypeNotSettable: " << retVal << endl;
 
     return retVal;
 }
@@ -534,29 +584,15 @@ bool TestNamedHeaderFields()
     bool setHdrSlot = msg.SetHdrSlot(1);
     uint8_t getHdrSlot = msg.GetHdrSlot();
 
-    bool setHdrType = msg.SetHdrType(WsprMessageTelemetryExtendedCommon<>::HdrType::RESERVED);
-    WsprMessageTelemetryExtendedCommon<>::HdrType getHdrType = msg.GetHdrType();
-
     // check assumptions
     retVal =
         setHdrSlot == true &&
-        getHdrSlot == 1 &&
-        setHdrType == true &&
-        getHdrType == WsprMessageTelemetryExtendedCommon<>::HdrType::RESERVED;
+        getHdrSlot == 1;
 
     cout << "TestNamedHeaderFields: " << retVal << endl;
 
     return retVal;
 }
-
-
-// Other tests:
-// - field setting/getting failing
-// - etc
-//
-// let the encode/decode test focus on known encode/decode scenarios
-// - ie don't have it test for field value clamping
-
 
 
 int main()
@@ -568,7 +604,8 @@ int main()
     retVal &= TestReset();
     retVal &= TestResetEverything();
     retVal &= TestDefineSetGetField();
-    retVal &= TestRawHeaderFields();
+    retVal &= TestRawHeaderFieldsHdrTypeSettable();
+    retVal &= TestRawHeaderFieldsHdrTypeNotSettable();
     retVal &= TestNamedHeaderFields();
 
     return !retVal;
