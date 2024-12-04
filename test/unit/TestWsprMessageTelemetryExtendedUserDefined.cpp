@@ -18,6 +18,7 @@ void Print(const string &header, T &msg, const vector<const char *> &fieldNameLi
         cout << fieldName << ": " << val << endl;
     }
 
+    cout << "id13    : " << msg.GetId13()          << endl;
     cout << "callsign: " << msg.GetCallsign()       << endl;
     cout << "grid4   : " << msg.GetGrid4()          << endl;
     cout << "powerDbm: " << (int) msg.GetPowerDbm() << endl;
@@ -64,7 +65,10 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     {
         fieldNameList.push_back(fd.name);
     }
+    fieldNameList.push_back("HdrType");
     fieldNameList.push_back("HdrSlot");
+    fieldNameList.push_back("HdrRESERVED");
+    fieldNameList.push_back("HdrTelemetryType");
 
     // create message holding max field count possible
     WsprMessageTelemetryExtendedUserDefined<29> msg;
@@ -83,15 +87,15 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
         msg.Set(fd.name, fd.value);
     }
 
-    Print("After Setting", msg, fieldNameList);
 
     // encode
     msg.SetId13(test.id13);
     msg.Set("HdrSlot", test.hdrSlot);
+    Print("After Setting", msg, fieldNameList);
     msg.Encode();
 
-    // cout << endl;
-    // Print("After Encode", msg, fieldNameList);
+    cout << endl;
+    Print("After Encode", msg, fieldNameList);
 
     // copy encoded values
     string  callsign = msg.GetCallsign();
@@ -102,9 +106,21 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     cout << endl;
 
     // check encode worked as expected
-    retVal &= callsign != test.wspr.callsign;
-    retVal &= grid4    != test.wspr.grid4;
-    retVal &= powerDbm != test.wspr.powerDbm;
+    if (callsign != test.wspr.callsign)
+    {
+        // cout << "callsign mismatch" << endl;
+        retVal = false;
+    }
+    if (grid4 != test.wspr.grid4)
+    {
+        // cout << "grid4 mismatch" << endl;
+        retVal = false;
+    }
+    if (powerDbm != test.wspr.powerDbm)
+    {
+        // cout << "powerDbm mismatch" << endl;
+        retVal = false;
+    }
 
     // take a copy before reset for field values
     WsprMessageTelemetryExtendedUserDefined<29> msgOld = msg;
@@ -127,31 +143,25 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     Print("After Decode", msg, fieldNameList);
 
     // compare decoded values to the values as they were going into Encode
-    for (const auto &fd : test.fieldDataList)
+    // this includes application fields and headers
+    for (const auto &fieldName : fieldNameList)
     {
         double valOld = -INFINITY;
-        msgOld.Get(fd.name, valOld);
+        msgOld.Get(fieldName, valOld);
 
         double valNew = INFINITY;
-        msg.Get(fd.name, valNew);
+        msg.Get(fieldName, valNew);
 
         if (valNew != valOld)
         {
             retVal = false;
 
-            cout << "Field " << fd.name << " decoded value " << valNew << " isn't the same as what went into encoding (" << valOld << ")" << endl;
+            cout << "Field " << fieldName << " decoded value " << valNew << " isn't the same as what went into encoding (" << valOld << ")" << endl;
         }
     }
 
-
-
-
-    // todo, check headers, too
-        // but they're off limits?
-            // make them all readable, not writable
-
-
-
+    cout << "DoTestEncodeDecode: " << retVal << endl;
+    cout << endl;
 
     return retVal;
 }
@@ -162,13 +172,13 @@ bool TestEncodeDecode()
     bool retVal = true;
 
     vector<EncodeDecodeTest> testList = {
-        // {   "00", 0, {
-        //     { "Altitude",      0, 21340,    20,     5000 },
-        //     { "Temperature", -50,    39,     1,      -55 },
-        //     { "Voltage",       3,     4.95,  0.05,  2.95 },
-        //     { "Speed",         0,    82,     2,       -5 },
-        //     { "GpsIsValid",    0,     1,     1,       -1 },
-        // },  { "000AA", "DN36", 53 }},
+        {   "00", 0, {
+            { "Altitude",      0, 21340,    20,     5000 },
+            { "Temperature", -50,    39,     1,      -55 },
+            { "Voltage",       3,     4.95,  0.05,  2.95 },
+            { "Speed",         0,    82,     2,       -5 },
+            { "GpsIsValid",    0,     1,     1,       -1 },
+        },  { "000AAA", "DN36", 53 }},
 
         {   "11", 0, {
             { "Altitude",      0, 21340,    20,    15000 },
@@ -178,7 +188,13 @@ bool TestEncodeDecode()
             { "GpsIsValid",    0,     1,     1,        1 },
         },  { "1B1HTD", "DF09", 3 }},
 
-
+        {   "Q2", 0, {
+            { "Altitude",      0, 21340,    20,    22000 },
+            { "Temperature", -50,    39,     1,       45 },
+            { "Voltage",       3,     4.95,  0.05,  5.15 },
+            { "Speed",         0,    82,     2,       95 },
+            { "GpsIsValid",    0,     1,     1,        2 },
+        },  { "QF2HJF", "GL09", 57 }},
     };
 
     for (const auto &test : testList)

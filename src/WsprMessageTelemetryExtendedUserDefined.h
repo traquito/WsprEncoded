@@ -82,8 +82,7 @@ public:
                 .stepSize  = 1,
                 .numValues = 16,
                 .numBits   = 4,
-                // .value     = 0, // User-Defined
-                .value     = 7, // User-Defined
+                .value     = 0, // User-Defined
             },
         }};
     }
@@ -169,7 +168,7 @@ public:
     {
         bool retVal = true;
 
-        if (FieldDefExists(fieldName) && IsOkToSetOrGet(fieldName))
+        if (FieldDefExists(fieldName) && IsOkToSet(fieldName))
         {
             FieldDef &fd = *GetFieldDef(fieldName);
 
@@ -201,7 +200,7 @@ public:
     {
         bool retVal = false;
 
-        if (FieldDefExists(fieldName) && IsOkToSetOrGet(fieldName))
+        if (FieldDefExists(fieldName))
         {
             retVal = true;
 
@@ -431,7 +430,7 @@ private:
         return GetFieldDef(fieldName) != nullptr;
     }
 
-    bool IsOkToSetOrGet(const char *fieldName)
+    bool IsOkToSet(const char *fieldName)
     {
         bool retVal = true;
 
