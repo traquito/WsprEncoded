@@ -18,6 +18,7 @@ if (CPPCHECK)
         --suppress=unusedFunction
         # don't complain about suppressions that don't match against code
         --suppress=unmatchedSuppression
+        --suppress=useStlAlgorithm
         --platform=native
     )
 
