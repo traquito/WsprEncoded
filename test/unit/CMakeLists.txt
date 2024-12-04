@@ -2,8 +2,9 @@ set(SOURCE_LIST
     TestWspr.cpp
     TestWsprChannelMap.cpp
     TestWsprMessageRegularType1.cpp
-    TestWsprMessageTelemetryCommon.cpp
     TestWsprMessageTelemetryBasic.cpp
+    TestWsprMessageTelemetryCommon.cpp
+    TestWsprMessageTelemetryExtendedUserDefined.cpp
     TestWsprUtl.cpp
 )
 
