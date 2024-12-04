@@ -179,65 +179,6 @@ public:
 
 private:
 
-    /////////////////////////////////////////////////////////////////
-    // Encoded/Decode Utilities
-    /////////////////////////////////////////////////////////////////
-
-    static char EncodeBase36(uint8_t val)
-    {
-        char retVal;
-
-        if (val < 10)
-        {
-            retVal = '0' + val;
-        }
-        else
-        {
-            retVal = 'A' + (val - 10);
-        }
-
-        return retVal;
-    }
-
-    static uint8_t DecodeBase36(char c)
-    {
-        uint8_t retVal = 0;
-
-        uint8_t cVal = c;
-
-        uint8_t aVal    = 'A';
-        uint8_t zVal    = 'Z';
-        uint8_t zeroVal = '0';
-
-        if (aVal <= cVal && cVal <= zVal)
-        {
-            retVal = 10 + (cVal - aVal);
-        }
-        else
-        {
-            retVal = cVal - zeroVal;
-        }
-
-        return retVal;
-    }
-
-    static uint8_t DecodePowerDbmToNum(uint8_t powerDbm)
-    {
-        uint8_t retVal = 0;
-
-        const auto &powerDbmList = Wspr::GetPowerDbmList();
-
-        for (uint8_t i = 0; i < powerDbmList.size(); ++i)
-        {
-            if (powerDbm == powerDbmList[i])
-            {
-                retVal = i;
-            }
-        }
-
-        return retVal;
-    }
-
 
     /////////////////////////////////////////////////////////////////
     // Encode
@@ -269,7 +210,7 @@ private:
         uint8_t id2Val = val % 36; val = val / 36;
 
         // convert to encoded form
-        char id2 = EncodeBase36(id2Val);
+        char id2 = WsprMessageTelemetryCommon::EncodeBase36(id2Val);
         char id4 = 'A' + id4Val;
         char id5 = 'A' + id5Val;
         char id6 = 'A' + id6Val;
@@ -352,7 +293,7 @@ private:
             uint8_t id6 = call[5];
 
             // convert to values which are offset from 'A'
-            uint8_t id2Val = DecodeBase36(id2);
+            uint8_t id2Val = WsprMessageTelemetryCommon::DecodeBase36(id2);
             uint8_t id4Val = id4 - 'A';
             uint8_t id5Val = id5 - 'A';
             uint8_t id6Val = id6 - 'A';
@@ -402,7 +343,7 @@ private:
         uint8_t g2Val = grid4[1] - 'A';
         uint8_t g3Val = grid4[2] - '0';
         uint8_t g4Val = grid4[3] - '0';
-        uint8_t powerVal = DecodePowerDbmToNum(WsprMessageRegularType1::GetPowerDbm());
+        uint8_t powerVal = WsprMessageTelemetryCommon::DecodePowerDbmToNum(WsprMessageRegularType1::GetPowerDbm());
 
         uint32_t val = 0;
         

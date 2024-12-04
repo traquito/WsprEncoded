@@ -53,6 +53,68 @@ public:
     }
 
 
+protected:
+
+    /////////////////////////////////////////////////////////////////
+    // Encoded/Decode Utilities
+    /////////////////////////////////////////////////////////////////
+
+    static char EncodeBase36(uint8_t val)
+    {
+        char retVal;
+
+        if (val < 10)
+        {
+            retVal = '0' + val;
+        }
+        else
+        {
+            retVal = 'A' + (val - 10);
+        }
+
+        return retVal;
+    }
+
+    static uint8_t DecodeBase36(char c)
+    {
+        uint8_t retVal = 0;
+
+        uint8_t cVal = c;
+
+        uint8_t aVal    = 'A';
+        uint8_t zVal    = 'Z';
+        uint8_t zeroVal = '0';
+
+        if (aVal <= cVal && cVal <= zVal)
+        {
+            retVal = 10 + (cVal - aVal);
+        }
+        else
+        {
+            retVal = cVal - zeroVal;
+        }
+
+        return retVal;
+    }
+
+    static uint8_t DecodePowerDbmToNum(uint8_t powerDbm)
+    {
+        uint8_t retVal = 0;
+
+        const auto &powerDbmList = Wspr::GetPowerDbmList();
+
+        for (uint8_t i = 0; i < powerDbmList.size(); ++i)
+        {
+            if (powerDbm == powerDbmList[i])
+            {
+                retVal = i;
+            }
+        }
+
+        return retVal;
+    }
+
+
 private:
 
     std::array<char, 3> id13_;
