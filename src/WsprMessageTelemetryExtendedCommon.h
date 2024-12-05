@@ -8,7 +8,14 @@
 #include "WsprMessageTelemetryCommon.h"
 
 
-// default template param set to max possible field count
+/////////////////////////////////////////////////////////////////
+// This is a template class, you must specify the number of
+// fields you intend to work with.
+//
+// The maximum theoretical number of fields is 29 1-bit fields.
+//
+// The total bitspace to configure fields within is 29.5 bits.
+/////////////////////////////////////////////////////////////////
 template <uint8_t FIELD_COUNT = 29>
 class WsprMessageTelemetryExtendedCommon
 : public WsprMessageTelemetryCommon
@@ -20,7 +27,7 @@ public:
         ResetEverything();
     }
 
-    // reset just values
+    // Reset field values, but not field definitions
     void Reset()
     {
         WsprMessageTelemetryCommon::Reset();
@@ -38,7 +45,7 @@ public:
         fieldDefHeaderList_[3].value = 0;
     }
 
-    // reset field definitions and values
+    // Reset field definitions and values
     void ResetEverything()
     {
         WsprMessageTelemetryCommon::Reset();
@@ -95,7 +102,23 @@ public:
     // User-Defined Field Definitions, Setters, Getters
     /////////////////////////////////////////////////////////////////
 
-    // Define User-Defined Fields
+    // Set up this object to know about named fields with a given
+    // numeric range and resolution (step size)
+    //
+    // The initial value of a defined field will be the specified lowValue
+    //
+    // Returns true if field is accepted
+    // Returns false if field is rejected
+    //
+    // A field will be rejected due to:
+    // - The template-specified number of fields have already been configured
+    // - The field name is a nullptr
+    // - The field already exists
+    // - lowValue >= highValue
+    // - stepSize <= 0
+    // - The stepSize does not evenly divide the range between lowValue and highValue
+    // - The field size exceeds the sum total capacity of 29.5 bits along with other fields
+    //   or by itself
     bool DefineField(const char *fieldName,
                      double      lowValue,
                      double      highValue,
@@ -171,7 +194,24 @@ public:
         return retVal;
     }
 
-    // Set User-Defined Field
+    // Set the value of a configured field.
+    //
+    // The value parameter is a double to make accepting a wide range
+    // of values easily settable, even if you do not intend to use
+    // a floating point number.
+    //
+    // A value that is set is retained internally at that precise value,
+    // and will be returned at that value with a subsequent Get().
+    // 
+    // When a field is encoded, the encoded wspr data will contain the
+    // encoded value, which itself is rounded to the precision specified
+    // in the field definition.
+    //
+    // Returns true on success.
+    // Returns false on error.
+    //
+    // An error will occur when:
+    // - The field is not defined
     bool Set(const char *fieldName, double value)
     {
         bool retVal = true;
@@ -203,8 +243,21 @@ public:
         return retVal;
     }
 
-    // Get User-Defined Field
-    // Can return NAN (must use std::isnan(), cannot compare via == NAN)
+    // Get the value of a configured field.
+    // 
+    // When a field is Set() then Get(), the value which was Set()
+    // will be returned by Get().
+    //
+    // When a Decode() operation occurs, the decoded values are overwritten
+    // onto the field values, and will become the new value which is
+    // returned by Get().
+    //
+    // Returns the field value on success.
+    // Returns NAN on error.
+    // - You must use std::isnan() to check for NAN, you cannot compare via == NAN
+    //
+    // An error will occur when:
+    // - The field is not defined
     double Get(const char *fieldName)
     {
         double retVal = NAN;
@@ -224,16 +277,44 @@ public:
     // User-Defined Field Definitions, Setters, Getters
     /////////////////////////////////////////////////////////////////
 
-    bool SetHdrSlot(uint8_t val)
+    // Read the default HdrTelemetryType, or, read the value
+    // which was set from Decode().
+    uint8_t GetHdrTelemetryType()
     {
-        return Set("HdrSlot", val);
+        return (uint8_t)Get("HdrTelemetryType");
     }
 
+    // Read the default HdrRESERVED, or, read the value
+    // which was set from Decode().
+    uint8_t GetHdrRESERVED()
+    {
+        return (uint8_t)Get("HdrRESERVED");
+    }
+
+    // Set the Extended Telemetry HdrSlot value.
+    //
+    // This field associates the encoded telemetry with the Regular
+    // message sent before it at the start minute associated with
+    // the channel being transmitted on.
+    //
+    // In a given repeating 10-minute cycle, starting on the
+    // start minute, which is the 0th minute, the slots are defined
+    // as:
+    // - start minute = [send Regular message]
+    // - +2 min = slot 0
+    // - +4 min = slot 1
+    // - +6 min = slot 2
+    // - +8 min = slot 3
+    void SetHdrSlot(uint8_t val)
+    {
+        Set("HdrSlot", val);
+    }
+
+    // Read the default HdrSlot, the previously SetHdrSlot() slot number,
+    // or, read the slot number which was set from Decode().
     uint8_t GetHdrSlot()
     {
-        double val = Get("HdrSlot");
-
-        return (uint8_t)val;
+        return (uint8_t)Get("HdrSlot");
     }
 
     enum class HdrType : uint8_t
@@ -247,12 +328,24 @@ public:
         canSetHdrType_ = val;
     }
 
+    // Read the default HdrType, or, read the value
+    // which was set from Decode().
+    uint8_t GetHdrType()
+    {
+        return (uint8_t)Get("HdrType");
+    }
+
 
     /////////////////////////////////////////////////////////////////
     // Encode / Decode
     /////////////////////////////////////////////////////////////////
 
-    // Encode fields
+    // Encode the values of the defined fields into a set of
+    // encoded WSPR Type 1 message fields (callsign, grid4, powerDbm).
+    // This overwrites the Type 1 message fields.
+    //
+    // The functions GetCallsign(), GetGrid4(), and GetPowerDbm() will
+    // subsequently return the encoded values for those fields.
     void Encode()
     {
         // create big number
@@ -327,9 +420,26 @@ public:
         WsprMessageRegularType1::SetPowerDbm(powerDbm);
     }
 
-    // Decode into fields
-    void Decode()
+    // Decode the values of the WSPR Type 1 message fields that were
+    // set by using SetCallsign(), SetGrid4(), and SetPowerDbm().
+    // This overwrites every defined field value and header field value.
+    //
+    // Returns true on success.
+    // Returns false on error.
+    //
+    // An error will occur when:
+    // - The HdrTelemetryType is not ExtendedTelemetry
+    // - The HdrRESERVED is not 0
+    //
+    // Even when Decode returns an error, Get() will still return the
+    // field and header values which were decoded.
+    //
+    // The decoded field values are stored internally and are retrieved
+    // by using Get().
+    bool Decode()
     {
+        bool retVal = true;
+
         // pull in inputs
         const char *callsign = WsprMessageRegularType1::GetCallsign();
         const char *grid4    = WsprMessageRegularType1::GetGrid4();
@@ -385,6 +495,10 @@ public:
 
         // unpack application fields
         UnpackFields(val, static_cast<FieldDef *>(fieldDefUserDefinedList_.data()), fieldDefUserDefinedListIdx_);
+
+        retVal = GetHdrTelemetryType() == 0 && GetHdrRESERVED() == 0;
+
+        return retVal;
     }
 
 

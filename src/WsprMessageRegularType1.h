@@ -16,6 +16,7 @@ public:
         Reset();
     }
 
+    // Reset the object back to its default state
     void Reset()
     {
         callsign_.Target(callsignBuf_, CALLSIGN_LEN_MAX + 1);
@@ -27,6 +28,13 @@ public:
         powerDbm_ = 0;
     }
 
+    // Set the callsign
+    //
+    // Returns true on success.
+    // Returns false on error.
+    //
+    // An error occurs when
+    // - The format of the callsign is invalid
     bool SetCallsign(const char *callsign)
     {
         bool retVal = false;
@@ -41,6 +49,7 @@ public:
         return retVal;
     }
 
+    // Get the callsign
     const char *GetCallsign() const
     {
         return callsign_.Get();
