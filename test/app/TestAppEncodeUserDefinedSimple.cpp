@@ -34,11 +34,11 @@ int main()
     /////////////////////////////////////////////////////////////////
 
     codecGpsMsg.Set("SatCountUSA",    12);
-    codecGpsMsg.Set("SatCountChina",  10);      // rounded to 12
+    codecGpsMsg.Set("SatCountChina",  10);      // rounded to 12   into encoded data on Encode()
     codecGpsMsg.Set("SatCountRussia",  0);
 
-    codecGpsMsg.Set("LockTimeSecs",    10.74);  // rounded to 10.5
-    codecGpsMsg.Set("LockTimeSecsAvg", 12.76);  // rounded to 13
+    codecGpsMsg.Set("LockTimeSecs",    10.74);  // rounded to 10.5 into encoded data on Encode()
+    codecGpsMsg.Set("LockTimeSecsAvg", 12.76);  // rounded to 13   into encoded data on Encode()
 
 
     /////////////////////////////////////////////////////////////////

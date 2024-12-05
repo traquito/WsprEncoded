@@ -105,6 +105,11 @@ public:
     // Set up this object to know about named fields with a given
     // numeric range and resolution (step size)
     //
+    // Values will be clamped between lowValue - highValue, inclusive.
+    // Negative, zero, positive, and decimal values are all supported.
+    // 
+    // See Set() for details on rounding.
+    //
     // The initial value of a defined field will be the specified lowValue
     //
     // Returns true if field is accepted
