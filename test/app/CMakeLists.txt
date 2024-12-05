@@ -7,8 +7,10 @@ set(
     TestAppChannelMapSimple.cpp
     TestAppDecode.cpp
     TestAppDecodeSimple.cpp
+    TestAppDecodeUserDefinedSimple.cpp
     TestAppEncode.cpp
     TestAppEncodeSimple.cpp
+    TestAppEncodeUserDefinedSimple.cpp
 )
 
 foreach(SOURCE IN LISTS SOURCE_LIST)
