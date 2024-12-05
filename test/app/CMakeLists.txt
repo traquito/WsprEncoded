@@ -11,6 +11,7 @@ set(
     TestAppEncode.cpp
     TestAppEncodeSimple.cpp
     TestAppEncodeUserDefinedSimple.cpp
+    TestAppSizeUserDefined.cpp
 )
 
 foreach(SOURCE IN LISTS SOURCE_LIST)
