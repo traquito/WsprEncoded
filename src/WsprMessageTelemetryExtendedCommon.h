@@ -394,19 +394,19 @@ private:
 
     struct FieldDef
     {
-        const char *name = "Undefined";
+        const char *name;
 
         // field configuration
-        double lowValue  = 0.0;
-        double highValue = 0.0;
-        double stepSize  = 0.0;
+        double lowValue;
+        double highValue;
+        double stepSize;
 
         // calculated properties of configuration
-        uint32_t numValues = 0;
-        double   numBits   = 0.0;
+        uint32_t numValues;
+        double   numBits;
 
         // dynamic value clamped to configuration
-        double value = 0.0;
+        double value;
     };
 
     FieldDef *GetFieldDefFrom(const char *fieldName, FieldDef *fieldDefList, uint8_t fieldDefListLen)
