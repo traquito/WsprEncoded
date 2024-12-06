@@ -67,8 +67,8 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     {
         fieldNameList.push_back(fd.name);
     }
-    fieldNameList.push_back("HdrType");
     fieldNameList.push_back("HdrSlot");
+    fieldNameList.push_back("HdrType");
     fieldNameList.push_back("HdrRESERVED");
     fieldNameList.push_back("HdrTelemetryType");
 
@@ -176,7 +176,7 @@ bool TestEncodeDecode()
             { "Voltage",       3,     4.95,  0.05,  2.95 },
             { "Speed",         0,    82,     2,       -5 },
             { "GpsIsValid",    0,     1,     1,       -1 },
-        },  { "000AAA", "DN36", 53 }},
+        },  { "000AAA", "EM21", 3 }},
 
         {   "11", 1, {
             { "Altitude",      0, 21340,    20,    15000 },
@@ -184,7 +184,7 @@ bool TestEncodeDecode()
             { "Voltage",       3,     4.95,  0.05,  3.15 },
             { "Speed",         0,    82,     2,       40 },
             { "GpsIsValid",    0,     1,     1,        1 },
-        },  { "1B1HTD", "DF09", 30 }},
+        },  { "1E1DEK", "IK93", 3 }},
 
         {   "Q2", 2, {
             { "Altitude",      0, 21340,    20,    22000 },
@@ -192,7 +192,7 @@ bool TestEncodeDecode()
             { "Voltage",       3,     4.95,  0.05,  5.15 },
             { "Speed",         0,    82,     2,       95 },
             { "GpsIsValid",    0,     1,     1,        2 },
-        },  { "QF2HJF", "GL10", 47 }},
+        },  { "QJ2CSA", "DO00", 53 }},
     };
 
     for (const auto &test : testList)
@@ -249,15 +249,15 @@ bool TestBits()
         },
         {
             {
-                { "F1", 0, 759250123, 1 },
+                { "F1", 0, 607369826, 1 },
             },
-            true, "1 field, 29.4999... bits (max val)",
+            true, "1 field, 29.177xxx bits (max val)",
         },
         {
             {
-                { "F1", 0, 759250124, 1 },
+                { "F1", 0, 607369827, 1 },
             },
-            false, "1 field, 29.5 bits (max val + 1)",
+            false, "1 field, 29.178xxx bits (max val + 1)",
         },
         {
             {
@@ -540,8 +540,8 @@ bool TestRawHeaderFields(WsprMessageTelemetryExtendedCommon<> &msg,
 bool TestRawHeaderFieldsHdrTypeSettable()
 {
     vector<const char *> fieldNameCanSetList = {
-        "HdrSlot",
         "HdrType",
+        "HdrSlot",
     };
 
     vector<const char *> fieldNameCanNotSetList = {
@@ -552,8 +552,8 @@ bool TestRawHeaderFieldsHdrTypeSettable()
     vector<const char *> fieldNameCanGetList = {
         "HdrTelemetryType",
         "HdrRESERVED",
-        "HdrSlot",
         "HdrType",
+        "HdrSlot",
     };
 
     WsprMessageTelemetryExtendedCommon msg;
@@ -585,8 +585,8 @@ bool TestRawHeaderFieldsHdrTypeNotSettable()
     vector<const char *> fieldNameCanGetList = {
         "HdrTelemetryType",
         "HdrRESERVED",
-        "HdrSlot",
         "HdrType",
+        "HdrSlot",
     };
 
     WsprMessageTelemetryExtendedCommon msg;

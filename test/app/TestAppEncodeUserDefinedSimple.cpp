@@ -76,9 +76,9 @@ int main()
     // Extract the now-encoded WSPR message fields
     /////////////////////////////////////////////////////////////////
 
-    const char *callsign = codecGpsMsg.GetCallsign();   // "026TBJ"
-    const char *grid4    = codecGpsMsg.GetGrid4();      // "QF28"
-    int         powerDbm = codecGpsMsg.GetPowerDbm();   // 53
+    const char *callsign = codecGpsMsg.GetCallsign();   // "036KVF"
+    const char *grid4    = codecGpsMsg.GetGrid4();      // "PP73"
+    int         powerDbm = codecGpsMsg.GetPowerDbm();   // 30
 
     cout << "Encoded data"          << endl;
     cout << "------------"          << endl;

@@ -33,9 +33,9 @@ int main()
     // Get encoded WSPR message fields (sourced elsewhere)
     /////////////////////////////////////////////////////////////////
 
-    codecGpsMsg.SetCallsign("026TBJ");
-    codecGpsMsg.SetGrid4("QF28");
-    codecGpsMsg.SetPowerDbm(53);
+    codecGpsMsg.SetCallsign("036KVF");
+    codecGpsMsg.SetGrid4("PP73");
+    codecGpsMsg.SetPowerDbm(30);
 
 
     /////////////////////////////////////////////////////////////////
