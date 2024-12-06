@@ -18,6 +18,24 @@ public:
         Base::SetCanSetHdrType(false);
     }
 
+    // Returns true on successful decode.
+    // Returns false on error.
+    //
+    // An error will occur when:
+    // - The HdrTelemetryType is not ExtendedTelemetry
+    // - The HdrRESERVED is not 0
+    // - The HdrType is not of type UserDefined
+    bool Decode()
+    {
+        bool retVal = true;
+        
+        retVal &= Base::Decode();
+        retVal &= Base::GetHdrType() == Base::HdrType::USER_DEFINED;
+
+        return retVal;
+    }
+    
+
 private:
 
     // hide header setting

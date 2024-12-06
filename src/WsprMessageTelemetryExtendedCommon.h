@@ -333,9 +333,9 @@ public:
 
     // Read the default HdrType, or, read the value
     // which was set from Decode().
-    uint8_t GetHdrType()
+    HdrType GetHdrType()
     {
-        return (uint8_t)Get("HdrType");
+        return (HdrType)Get("HdrType");
     }
 
 

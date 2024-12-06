@@ -617,14 +617,14 @@ bool TestNamedHeaderFields()
     msg.SetHdrSlot(1);
     uint8_t getHdrSlot = msg.GetHdrSlot();
 
-    uint8_t getHdrType = msg.GetHdrType();
+    WsprMessageTelemetryExtendedCommon<>::HdrType getHdrType = msg.GetHdrType();
 
     // check assumptions
     retVal =
         getHdrTelemetryType == 0 &&
         getHdrRESERVED == 0 &&
         getHdrSlot == 1 &&
-        getHdrType == 0;
+        getHdrType == WsprMessageTelemetryExtendedCommon<>::HdrType::USER_DEFINED;
 
     cout << "TestNamedHeaderFields: " << retVal << endl;
 
