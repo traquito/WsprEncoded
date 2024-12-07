@@ -109,17 +109,17 @@ bool DoEncodeDecodeTest(const EncodeDecodeTest &test)
     // check encode worked as expected
     if (callsign != test.wspr.callsign)
     {
-        // cout << "callsign mismatch" << endl;
+        cout << "callsign mismatch, expected " << test.wspr.callsign << ", but got " << callsign << endl;
         retVal = false;
     }
     if (grid4 != test.wspr.grid4)
     {
-        // cout << "grid4 mismatch" << endl;
+        cout << "grid4 mismatch, expected " << test.wspr.grid4 << ", but got " << grid4 << endl;
         retVal = false;
     }
     if (powerDbm != test.wspr.powerDbm)
     {
-        // cout << "powerDbm mismatch" << endl;
+        cout << "powerDbm mismatch, expected " << (int)test.wspr.powerDbm << ", but got " << (int)powerDbm << endl;
         retVal = false;
     }
 
@@ -437,6 +437,57 @@ bool TestResetEverything()
     return retVal;
 }
 
+bool TestDefinePrecision()
+{
+    // particular test cases
+    vector<InputTest<FieldData, bool>> testList = {
+        { { "F1", 2.4, 4.35, 0.05 }, true, "" },
+    };
+
+    bool retVal = true;
+
+    for (const auto &test : testList)
+    {
+        WsprMessageTelemetryExtendedCommon msg;
+
+        bool ok = msg.DefineField(test.input.name, test.input.lowValue, test.input.highValue, test.input.stepSize);
+
+        if (ok != test.expectedRetVal)
+        {
+            retVal = false;
+
+            cout << "ERR: Got " << ok << ", but expected " << test.expectedRetVal << " (" << test.comment << ")" << endl;
+            cout << "    Reason: " << msg.GetDefineFieldErr() << endl;
+        }
+    }
+
+    // extreme
+    double stepSize = 0.001;
+    for (double lowValue = -5; lowValue <= 5; lowValue += stepSize)
+    {
+        for (double highValue = lowValue + 0.001; highValue <= 5; highValue += stepSize)
+        {
+            WsprMessageTelemetryExtendedCommon msg;
+
+            bool ok = msg.DefineField("test", lowValue, highValue, stepSize);
+
+            if (ok == false)
+            {
+                retVal = false;
+
+                cout << "ERR: Got " << ok << ", but expected " << true << endl;
+                cout << "    Reason: " << msg.GetDefineFieldErr() << endl;
+                cout << "    " << lowValue << ", " << highValue << ", " << stepSize << endl;
+                cout << endl;
+            }
+        }
+    }
+
+    cout << "TestDefinePrecision: " << retVal << endl;
+
+    return retVal;
+}
+
 bool TestDefineSetGetField()
 {
     vector<InputTest<vector<FieldData>, bool>> testList = {
@@ -641,6 +692,7 @@ int main()
     retVal &= TestBits();
     retVal &= TestReset();
     retVal &= TestResetEverything();
+    retVal &= TestDefinePrecision();
     retVal &= TestDefineSetGetField();
     retVal &= TestRawHeaderFieldsHdrTypeSettable();
     retVal &= TestRawHeaderFieldsHdrTypeNotSettable();

@@ -52,6 +52,7 @@ public:
 
         fieldDefUserDefinedList_ = std::array<FieldDef, FIELD_COUNT>{};
         fieldDefUserDefinedListIdx_ = 0;
+        fieldDefFailReason_ = "";
 
         numBitsSum_ = 0.0;
 
@@ -119,6 +120,7 @@ public:
     // - The template-specified number of fields have already been configured
     // - The field name is a nullptr
     // - The field already exists
+    // - lowValue, highValue, or stepSize is too precise (more than 3 decimal places of precision)
     // - lowValue >= highValue
     // - stepSize <= 0
     // - The stepSize does not evenly divide the range between lowValue and highValue
@@ -129,43 +131,128 @@ public:
                      double      highValue,
                      double      stepSize)
     {
+        static const double FACTOR = 1000;    // 3 decimal places
+
         bool retVal = true;
+
+        auto ScaleUp = [=](double value) {
+            int64_t valueScaledUp = 0;
+
+            if (value < 0)
+            {
+                valueScaledUp = (value * FACTOR) - 0.5;
+            }
+            else if (value > 0)
+            {
+                valueScaledUp = (value * FACTOR) + 0.5;
+            }
+
+            return valueScaledUp;
+        };
+
+        auto FieldIsTooPrecise = [&](double value){
+            int64_t valueScaledUp   = ScaleUp(value);
+            double  valueScaledBack = valueScaledUp / FACTOR;
+
+            double diff = fabs(valueScaledBack - value);
+
+            bool retVal = false;
+            if (diff > 0.000000001)    // billionth
+            {
+                retVal = true;
+            }
+
+            return retVal;
+        };
 
         if (CanFitOneMore() == false)
         {
             retVal = false;
+
+            fieldDefFailReason_ = "Can not fit another field";
         }
         else if (fieldName == nullptr)
         {
             retVal = false;
+
+            fieldDefFailReason_ = "Field name is nullptr";
         }
         else if (FieldDefExists(fieldName))
         {
             retVal = false;
+
+            fieldDefFailReason_ = "Field already exists";
+        }
+        else if (FieldIsTooPrecise(lowValue))
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "Low value is too precise";
+        }
+        else if (FieldIsTooPrecise(highValue))
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "High value is too precise";
+        }
+        else if (FieldIsTooPrecise(stepSize))
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "Step size is too precise";
         }
         else if (lowValue >= highValue)
         {
             retVal = false;
+
+            fieldDefFailReason_ = "Low value >= High value";
         }
         else if (stepSize <= 0)
         {
             retVal = false;
+
+            fieldDefFailReason_ = "Step size <= 0";
         }
         else
         {
             // is there a integer-number number of divisions of the low-to-high
             // range when incremented by the step size?
-            double stepCount = (highValue - lowValue) / stepSize;
-            if (stepCount != (int)stepCount)
+            //
+            // due to floating point issues, this needs to be done in a way that scales the
+            // (potentially) decimal numbers into pure integer space. we know this is safe
+            // to do here because we already checked that the numbers are not any more
+            // precise than the amount we scale.
+            auto GetStepCount = [&](double lowValue, double highValue, double stepSize) -> uint32_t {
+                uint32_t retVal = 0;
+
+                int64_t lowValueScaledUpAsInt  = ScaleUp(lowValue);
+                int64_t highValueScaledUpAsInt = ScaleUp(highValue);
+                int64_t stepSizeScaledUpAsInt  = ScaleUp(stepSize);
+
+                double stepCount = ((double)(highValueScaledUpAsInt - lowValueScaledUpAsInt)) / stepSizeScaledUpAsInt;
+
+                if (stepCount == (uint32_t)stepCount)
+                {
+                    retVal = stepCount;
+                }
+
+                return retVal;
+            };
+
+            uint32_t stepCount = GetStepCount(lowValue, highValue, stepSize);
+
+            if (stepCount == 0)
             {
                 retVal = false;
+
+                fieldDefFailReason_ = "Step size does not evenly divide the low-to-high range";
             }
             else
             {
                 FieldDef fd;
 
                 // known to be an integer value as checked previously
-                fd.numValues = (uint32_t)(((highValue - lowValue) / stepSize) + 1);
+                fd.numValues = stepCount + 1;
 
                 // calc bits used by this field
                 fd.numBits = std::log2(fd.numValues);
@@ -174,6 +261,8 @@ public:
                 if (numBitsSum_ + fd.numBits > MAX_BITS)
                 {
                     retVal = false;
+
+                    fieldDefFailReason_ = "Field overflows available bits";
                 }
                 else
                 {
@@ -197,6 +286,11 @@ public:
         }
 
         return retVal;
+    }
+
+    const char *GetDefineFieldErr() const
+    {
+        return fieldDefFailReason_;
     }
 
     // Set the value of a configured field.
@@ -623,6 +717,7 @@ private:
 
     std::array<FieldDef, FIELD_COUNT> fieldDefUserDefinedList_;
     uint16_t fieldDefUserDefinedListIdx_;
+    const char *fieldDefFailReason_;
 
     double numBitsSum_;
 
