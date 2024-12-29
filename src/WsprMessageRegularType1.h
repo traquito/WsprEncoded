@@ -100,8 +100,6 @@ public:
     }
     
 
-private:
-
     static bool CallsignIsValid(const char *callsign)
     {
         bool retVal = false;
