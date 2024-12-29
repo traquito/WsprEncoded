@@ -18,5 +18,5 @@ foreach(SOURCE IN LISTS SOURCE_LIST)
     get_filename_component(TEST_NAME ${SOURCE} NAME_WLE)
 
     add_executable(${TEST_NAME} ${SOURCE})
-    target_link_libraries(${TEST_NAME} PRIVATE libWsprEncoded)
+    target_link_libraries(${TEST_NAME} PRIVATE WsprEncoded)
 endforeach()
