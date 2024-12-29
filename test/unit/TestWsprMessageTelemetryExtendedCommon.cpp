@@ -682,6 +682,53 @@ bool TestNamedHeaderFields()
     return retVal;
 }
 
+bool TestGetFieldDefList()
+{
+    bool retVal = true;
+
+    {
+        WsprMessageTelemetryExtendedCommon<> msg;
+
+        retVal &= msg.GetFieldDefListLen() == 0;
+    }
+
+    {
+        WsprMessageTelemetryExtendedCommon<> msg;
+
+        msg.DefineField("ABC", 0, 1, 1);
+
+        retVal &= msg.GetFieldDefListLen() == 1;
+    }
+
+    {
+        vector<string> fieldList = {
+            "ABC",
+            "DEF",
+            "GHI",
+        };
+
+        WsprMessageTelemetryExtendedCommon<> msg;
+
+        for (const auto & field : fieldList)
+        {
+            msg.DefineField(field.c_str(), 0, 1, 1);
+        }
+
+        retVal &= msg.GetFieldDefListLen() == fieldList.size();
+
+        auto fieldDefList = msg.GetFieldDefList();
+
+        for (int i = 0; i < msg.GetFieldDefListLen(); ++i)
+        {
+            retVal &= fieldList[i] == fieldDefList[i].name;
+        }
+    }
+
+    cout << "TestGetFieldDefList: " << retVal << endl;
+
+    return retVal;
+}
+
 
 int main()
 {
@@ -697,6 +744,7 @@ int main()
     retVal &= TestRawHeaderFieldsHdrTypeSettable();
     retVal &= TestRawHeaderFieldsHdrTypeNotSettable();
     retVal &= TestNamedHeaderFields();
+    retVal &= TestGetFieldDefList();
 
     return !retVal;
 }

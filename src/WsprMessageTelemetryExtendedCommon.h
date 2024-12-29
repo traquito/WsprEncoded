@@ -22,6 +22,28 @@ class WsprMessageTelemetryExtendedCommon
 {
 public:
 
+    static constexpr double MAX_BITS = 29.178;
+
+    struct FieldDef
+    {
+        const char *name;
+
+        // field configuration
+        double lowValue;
+        double highValue;
+        double stepSize;
+
+        // calculated properties of configuration
+        uint32_t numValues;
+        double   numBits;
+
+        // dynamic value clamped to configuration
+        double value;
+    };
+
+
+public:
+
     WsprMessageTelemetryExtendedCommon()
     {
         ResetEverything();
@@ -291,6 +313,16 @@ public:
     const char *GetDefineFieldErr() const
     {
         return fieldDefFailReason_;
+    }
+
+    uint16_t GetFieldDefListLen() const
+    {
+        return fieldDefUserDefinedListIdx_;
+    }
+
+    const std::array<FieldDef, FIELD_COUNT> &GetFieldDefList() const
+    {
+        return fieldDefUserDefinedList_;
     }
 
     // Set the value of a configured field.
@@ -600,25 +632,6 @@ public:
 
 
 private:
-
-    static constexpr double MAX_BITS = 29.178;
-
-    struct FieldDef
-    {
-        const char *name;
-
-        // field configuration
-        double lowValue;
-        double highValue;
-        double stepSize;
-
-        // calculated properties of configuration
-        uint32_t numValues;
-        double   numBits;
-
-        // dynamic value clamped to configuration
-        double value;
-    };
 
     FieldDef *GetFieldDefFrom(const char *fieldName, FieldDef *fieldDefList, uint8_t fieldDefListLen)
     {
