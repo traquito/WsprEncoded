@@ -14,7 +14,7 @@
 //
 // The maximum theoretical number of fields is 29 1-bit fields.
 //
-// The total bitspace to configure fields within is 29.178 bits.
+// The total bitspace to configure fields within is 29.180 bits.
 /////////////////////////////////////////////////////////////////
 template <uint8_t FIELD_COUNT = 29>
 class WsprMessageTelemetryExtendedCommon
@@ -22,7 +22,7 @@ class WsprMessageTelemetryExtendedCommon
 {
 public:
 
-    static constexpr double MAX_BITS = 29.178;
+    static constexpr double MAX_BITS = 29.180;
 
     struct FieldDef
     {
@@ -146,7 +146,7 @@ public:
     // - lowValue >= highValue
     // - stepSize <= 0
     // - The stepSize does not evenly divide the range between lowValue and highValue
-    // - The field size exceeds the sum total capacity of 29.178 bits along with other fields
+    // - The field size exceeds the sum total capacity of 29.180 bits along with other fields
     //   or by itself
     bool DefineField(const char *fieldName,
                      double      lowValue,

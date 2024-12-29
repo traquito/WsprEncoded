@@ -249,15 +249,15 @@ bool TestBits()
         },
         {
             {
-                { "F1", 0, 607369826, 1 },
+                { "F1", 0, 608212403, 1 },
             },
-            true, "1 field, 29.177xxx bits (max val)",
+            true, "1 field, 29.179xxx bits (max val)",
         },
         {
             {
-                { "F1", 0, 607369827, 1 },
+                { "F1", 0, 608212404, 1 },
             },
-            false, "1 field, 29.178xxx bits (max val + 1)",
+            false, "1 field, 29.180xxx bits (max val + 1)",
         },
         {
             {
