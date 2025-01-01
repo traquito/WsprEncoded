@@ -8,6 +8,104 @@ using namespace TestUtl;
 #include "WsprMessageTelemetryExtendedCommon.h"
 
 
+bool TestSetClamp()
+{
+    struct FieldDataSetValue
+    {
+        const char *name = "";
+
+        double lowValue = 0;
+        double highValue = 0;
+        double stepSize = 0;
+
+        double setValue = 0;
+    };
+
+    struct TestResult
+    {
+        bool   setOk    = true;
+        double getValue = 0;
+    };
+
+    // particular test cases
+    vector<InputTest<FieldDataSetValue, TestResult>> testList = {
+        {
+            { "F1", 0, 10, 1, 0 },
+            { true, 0 },
+            "just a normal set at low end"
+        },
+        {
+            { "F1", 0, 10, 1, 10 },
+            { true, 10 },
+            "just a normal set at high end"
+        },
+        {
+            { "F1", 0, 10, 1, 5 },
+            { true, 5 },
+            "just a normal set at mid range"
+        },
+        {
+            { "F1", 0, 10, 1, -1 },
+            { false, 0 },
+            "set below range"
+        },
+        {
+            { "F1", 0, 10, 1, 11 },
+            { false, 10 },
+            "set above range"
+        },
+        {
+            { "F1", 0, 10, 1, NAN },
+            { false, 0 },
+            "set NAN"
+        },
+        {
+            { "F1", 0, 10, 1, (1.0 / 0.0) },
+            { false, 0 },
+            "set +inf"
+        },
+        {
+            { "F1", 0, 10, 1, (-1.0 / 0.0) },
+            { false, 0 },
+            "set -inf"
+        },
+        {
+            { "F1", 0, 10, 1, -0.0 },
+            { false, 0 },
+            "set -0.0"
+        },
+    };
+
+    bool retVal = true;
+
+    for (const auto &test : testList)
+    {
+        WsprMessageTelemetryExtendedCommon msg;
+
+        msg.DefineField(test.input.name, test.input.lowValue, test.input.highValue, test.input.stepSize);
+
+        bool setOk = msg.Set(test.input.name, test.input.setValue);
+        double getValue = msg.Get(test.input.name);
+
+        if (setOk != test.expectedRetVal.setOk)
+        {
+            retVal = false;
+
+            cout << "ERR: Got setOk " << setOk << ", but expected " << test.expectedRetVal.setOk << " (" << test.comment << ")" << endl;
+        }
+        if (getValue != test.expectedRetVal.getValue)
+        {
+            retVal = false;
+
+            cout << "ERR: Got getValue " << getValue << ", but expected " << test.expectedRetVal.getValue << " (" << test.comment << ")" << endl;
+        }
+    }
+
+    cout << "TestSetClamp: " << retVal << endl;
+
+    return retVal;
+}
+
 template <typename T>
 void Print(const string &header, T &msg, const vector<const char *> &fieldNameList)
 {
@@ -734,6 +832,7 @@ int main()
 {
     bool retVal = true;
 
+    retVal &= TestSetClamp();
     retVal &= TestEncodeDecode();
     retVal &= TestDecodeFailure();
     retVal &= TestBits();

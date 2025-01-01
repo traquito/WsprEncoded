@@ -351,6 +351,29 @@ public:
         {
             FieldDef &fd = *GetFieldDef(fieldName);
 
+            // do value type validation
+            if (std::isnan(value))
+            {
+                value = fd.lowValue;
+
+                retVal = false;
+            }
+            else if (std::isinf(value))
+            {
+                value = fd.lowValue;
+
+                retVal = false;
+            }
+
+            // check for negative zero, which may still wind up getting clamped
+            if (value == 0.0 && std::signbit(value))
+            {
+                value = 0.0;
+
+                retVal = false;
+            }
+
+            // clamp to range
             if (value < fd.lowValue)
             {
                 value = fd.lowValue;
