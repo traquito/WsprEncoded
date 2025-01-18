@@ -5,3 +5,4 @@
 #include "WsprMessageRegularType1.h"
 #include "WsprMessageTelemetryBasic.h"
 #include "WsprMessageTelemetryExtendedUserDefined.h"
+#include "WsprMessageTelemetryExtendedUserDefinedDynamic.h"
