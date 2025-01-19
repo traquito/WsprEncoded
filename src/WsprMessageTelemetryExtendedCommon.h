@@ -648,7 +648,7 @@ public:
         // unpack application fields
         UnpackFields(val, static_cast<FieldDef *>(fieldDefUserDefinedList_.data()), fieldDefUserDefinedListIdx_);
 
-        retVal = GetHdrTelemetryType() == 0 && GetHdrRESERVED() == 0;
+        retVal = GetHdrTelemetryType() == 0;
 
         return retVal;
     }
