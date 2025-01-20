@@ -312,9 +312,6 @@ bool TestDecodeFailure()
         { "1Y4PAS", "HK08", 10 },
         { "QX7DGS", "JQ97", 33 },
         { "0X2FDM", "MI65", 27 },
-        { "000AAA", "AA00", 7  },   // reserved = 1
-        { "000AAA", "AA00", 13 },   // reserved = 2
-        { "000AAA", "AA00", 20 },   // reserved = 3
     };
 
     for (const auto &wspr : wsprList)

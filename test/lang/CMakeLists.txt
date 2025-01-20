@@ -3,6 +3,7 @@
 set(
     SOURCE_LIST
     TestLang.cpp
+    TestLangDynamic.cpp
 )
 
 foreach(SOURCE IN LISTS SOURCE_LIST)

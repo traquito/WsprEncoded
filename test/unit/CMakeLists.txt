@@ -7,6 +7,9 @@ set(SOURCE_LIST
     TestWsprMessageTelemetryExtendedCommon.cpp
     TestWsprMessageTelemetryExtendedUserDefined.cpp
     TestWsprUtl.cpp
+
+    WsprMessageTelemetryExtendedCommonDynamic.cpp
+    WsprMessageTelemetryExtendedUserDefinedDynamic.cpp
 )
 
 foreach(SOURCE IN LISTS SOURCE_LIST)

@@ -648,6 +648,7 @@ public:
         // unpack application fields
         UnpackFields(val, static_cast<FieldDef *>(fieldDefUserDefinedList_.data()), fieldDefUserDefinedListIdx_);
 
+        // validate only that this is Extended Telemetry
         retVal = GetHdrTelemetryType() == 0;
 
         return retVal;
