@@ -5,11 +5,10 @@ set(SOURCE_LIST
     TestWsprMessageTelemetryBasic.cpp
     TestWsprMessageTelemetryCommon.cpp
     TestWsprMessageTelemetryExtendedCommon.cpp
+    TestWsprMessageTelemetryExtendedCommonDynamic.cpp
     TestWsprMessageTelemetryExtendedUserDefined.cpp
+    TestWsprMessageTelemetryExtendedUserDefinedDynamic.cpp
     TestWsprUtl.cpp
-
-    WsprMessageTelemetryExtendedCommonDynamic.cpp
-    WsprMessageTelemetryExtendedUserDefinedDynamic.cpp
 )
 
 foreach(SOURCE IN LISTS SOURCE_LIST)
