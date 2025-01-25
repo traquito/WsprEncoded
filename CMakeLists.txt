@@ -11,8 +11,10 @@ project(WsprEncoded LANGUAGES CXX)
 
 include(cppcheck.cmake)
 
-include(CTest)
-enable_testing()
-
 add_subdirectory(src)
-add_subdirectory(test)
+
+if(PROJECT_IS_TOP_LEVEL)
+    include(CTest)
+    enable_testing()
+    add_subdirectory(test)
+endif()
