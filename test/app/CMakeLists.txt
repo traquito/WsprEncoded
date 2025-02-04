@@ -8,9 +8,11 @@ set(
     TestAppDecode.cpp
     TestAppDecodeSimple.cpp
     TestAppDecodeUserDefinedSimple.cpp
+    TestAppDecodeVendorDefinedSimple.cpp
     TestAppEncode.cpp
     TestAppEncodeSimple.cpp
     TestAppEncodeUserDefinedSimple.cpp
+    TestAppEncodeVendorDefinedSimple.cpp
     TestAppSizeUserDefined.cpp
 )
 

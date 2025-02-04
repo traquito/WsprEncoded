@@ -472,7 +472,7 @@ public:
     enum class HdrType : uint8_t
     {
         USER_DEFINED = 0,
-        RESERVED = 15,
+        VENDOR_DEFINED = 15,
     };
 
     void SetCanSetHdrType(bool val)

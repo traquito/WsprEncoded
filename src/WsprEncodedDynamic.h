@@ -6,3 +6,4 @@
 #include "WsprMessageTelemetryBasic.h"
 #include "WsprMessageTelemetryExtendedCommonDynamic.h"
 #include "WsprMessageTelemetryExtendedUserDefinedDynamic.h"
+#include "WsprMessageTelemetryExtendedVendorDefinedDynamic.h"
