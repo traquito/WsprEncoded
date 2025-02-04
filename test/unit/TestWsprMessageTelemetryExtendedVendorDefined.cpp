@@ -46,12 +46,38 @@ bool TestBadDecode()
     return retVal;
 }
 
+bool TestResetEverything()
+{
+    WsprMessageTelemetryExtendedVendorDefined msg;
+
+    msg.Encode();
+
+    string  callsign = msg.GetCallsign();
+    string  grid4    = msg.GetGrid4();
+    uint8_t powerDbm = msg.GetPowerDbm();
+
+
+    msg.ResetEverything();
+    msg.Encode();
+    
+
+    bool retVal = callsign == msg.GetCallsign() &&
+                  grid4    == msg.GetGrid4()    &&
+                  powerDbm == msg.GetPowerDbm();
+
+    cout << "TestResetEverything: " << retVal;
+
+    return retVal;
+}
+
+
 int main()
 {
     bool retVal = true;
 
     retVal &= TestHdrTypeIsRestricted();
     retVal &= TestBadDecode();
+    retVal &= TestResetEverything();
 
     return !retVal;
 }

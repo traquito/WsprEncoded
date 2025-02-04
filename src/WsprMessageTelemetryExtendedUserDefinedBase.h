@@ -13,7 +13,15 @@ public:
 
     WsprMessageTelemetryExtendedUserDefinedBase()
     {
+        ResetEverything();
+    }
+
+    void ResetEverything()
+    {
+        Base::ResetEverything();
+
         // don't allow this named class to change its protocol type
+        Base::SetCanSetHdrType(true);
         Base::Set("HdrType", (uint8_t)Base::HdrType::USER_DEFINED);
         Base::SetCanSetHdrType(false);
     }
