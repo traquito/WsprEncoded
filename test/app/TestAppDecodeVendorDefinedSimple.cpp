@@ -45,10 +45,10 @@ int main()
     int uptimeMinutes     = codec.Get("UptimeMinutes");
     int rebootsTodayCount = codec.Get("RebootsTodayCount");
 
-    cout << "Encoded data"                           << endl;
-    cout << "------------"                           << endl;
-    cout << "satCountUsa    : " << uptimeMinutes     << endl; // 95
-    cout << "satCountChina  : " << rebootsTodayCount << endl; //  2
+    cout << "Encoded data"                             << endl;
+    cout << "------------"                             << endl;
+    cout << "uptimeMinutes    : " << uptimeMinutes     << endl; // 95
+    cout << "rebootsTodayCount: " << rebootsTodayCount << endl; //  2
 
     return 0;
 }
