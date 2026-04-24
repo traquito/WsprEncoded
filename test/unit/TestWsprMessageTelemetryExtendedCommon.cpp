@@ -824,6 +824,46 @@ bool TestGetFieldDefList()
     return retVal;
 }
 
+bool TestSegmentedField()
+{
+    using Msg = WsprMessageTelemetryExtendedCommon<>;
+    using SegmentDef = Msg::SegmentDef;
+
+    Msg msg1;
+
+    const std::array<SegmentDef, 3> segments = {{
+        { -60, -30, 5 },
+        { -30,  30, 3 },
+        {  30,  70, 8 },
+    }};
+
+    bool defineOk = msg1.DefineField("Temp", segments);
+    bool setOk = msg1.Set("Temp", 23);
+
+    msg1.SetId13("Q5");
+    msg1.SetHdrSlot(2);
+    msg1.Encode();
+
+    Msg msg2;
+    msg2.DefineField("Temp", segments);
+    msg2.SetCallsign(msg1.GetCallsign());
+    msg2.SetGrid4(msg1.GetGrid4());
+    msg2.SetPowerDbm(msg1.GetPowerDbm());
+
+    bool decodeOk = msg2.Decode();
+    double decodedValue = msg2.Get("Temp");
+
+    bool retVal =
+        defineOk == true &&
+        setOk == true &&
+        decodeOk == true &&
+        decodedValue == 24;
+
+    cout << "TestSegmentedField: " << retVal << endl;
+
+    return retVal;
+}
+
 
 int main()
 {
@@ -841,6 +881,7 @@ int main()
     retVal &= TestRawHeaderFieldsHdrTypeNotSettable();
     retVal &= TestNamedHeaderFields();
     retVal &= TestGetFieldDefList();
+    retVal &= TestSegmentedField();
 
     return !retVal;
 }

@@ -8,6 +8,10 @@ set(SOURCE_LIST
     TestWsprMessageTelemetryExtendedCommonDynamic.cpp
     TestWsprMessageTelemetryExtendedUserDefined.cpp
     TestWsprMessageTelemetryExtendedUserDefinedDynamic.cpp
+    TestWsprMessageTelemetryExtendedTrackerTelemetry.cpp
+    TestWsprMessageTelemetryExtendedTrackerTelemetryDynamic.cpp
+    TestWsprMessageTelemetryExtendedGpsTelemetry.cpp
+    TestWsprMessageTelemetryExtendedGpsTelemetryDynamic.cpp
     TestWsprMessageTelemetryExtendedVendorDefined.cpp
     TestWsprMessageTelemetryExtendedVendorDefinedDynamic.cpp
     TestWsprUtl.cpp

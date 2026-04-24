@@ -137,6 +137,46 @@ public:
 
         return {};
     }
+
+    static uint8_t GetId13IndexForChannel(const char *band, uint16_t channel)
+    {
+        ChannelDetails cd = GetChannelDetails(band, channel);
+
+        uint8_t rowsPerCol = 5 * 4;
+        uint16_t id1Offset = 0;
+        if (cd.id1 == '1') { id1Offset = 200; }
+        if (cd.id1 == 'Q') { id1Offset = 400; }
+
+        uint8_t id3Offset = ('0' <= cd.id3 && cd.id3 <= '9') ? static_cast<uint8_t>(cd.id3 - '0') : 0;
+
+        return static_cast<uint8_t>(cd.channel - id1Offset - (id3Offset * rowsPerCol));
+    }
+
+    static ChannelDetails GetChannelDetailsFromId13AndIdx(const char *band, const char *id13, uint8_t id13Idx)
+    {
+        band = Wspr::GetDefaultBandIfNotValid(band);
+
+        if (id13 == nullptr || id13[0] == '\0' || id13[1] == '\0' || id13[2] != '\0')
+        {
+            return {};
+        }
+
+        uint16_t id1Offset = 0;
+        if (id13[0] == '1') { id1Offset = 200; }
+        else if (id13[0] == 'Q') { id1Offset = 400; }
+        else if (id13[0] != '0') { return {}; }
+
+        if (id13Idx >= 20 || id13[1] < '0' || id13[1] > '9')
+        {
+            return {};
+        }
+
+        uint8_t rowsPerCol = 5 * 4;
+        uint8_t id3Offset = static_cast<uint8_t>(id13[1] - '0');
+        uint16_t channel = id1Offset + (id3Offset * rowsPerCol) + id13Idx;
+
+        return GetChannelDetails(band, channel);
+    }
 };
 
 

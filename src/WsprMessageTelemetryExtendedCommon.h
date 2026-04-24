@@ -23,6 +23,15 @@ class WsprMessageTelemetryExtendedCommon
 public:
 
     static constexpr double MAX_BITS = 29.180;
+    static constexpr uint8_t MAX_SEGMENT_COUNT = 8;
+
+    struct SegmentDef
+    {
+        double lowValue = 0;
+        double highValue = 0;
+        double stepSize = 0;
+        uint32_t numValues = 0;
+    };
 
     struct FieldDef
     {
@@ -36,6 +45,11 @@ public:
         // calculated properties of configuration
         uint32_t numValues;
         double   numBits;
+
+        // optional segmented encoding
+        bool isSegmented = false;
+        uint8_t segmentCount = 0;
+        std::array<SegmentDef, MAX_SEGMENT_COUNT> segmentList{};
 
         // dynamic value clamped to configuration
         double value;
@@ -78,44 +92,39 @@ public:
 
         numBitsSum_ = 0.0;
 
-        fieldDefHeaderList_ = std::array<FieldDef, 4>{{
-            {
-                .name      = "HdrTelemetryType",
-                .lowValue  = 0,
-                .highValue = 1,
-                .stepSize  = 1,
-                .numValues = 2,
-                .numBits   = 1,
-                .value     = 0, // Extended Telemetry
-            },
-            {
-                .name      = "HdrRESERVED",
-                .lowValue  = 0,
-                .highValue = 3,
-                .stepSize  = 1,
-                .numValues = 4,
-                .numBits   = 2,
-                .value     = 0,
-            },
-            {
-                .name      = "HdrType",
-                .lowValue  = 0,
-                .highValue = 15,
-                .stepSize  = 1,
-                .numValues = 16,
-                .numBits   = 4,
-                .value     = 0, // User-Defined
-            },
-            {
-                .name      = "HdrSlot",
-                .lowValue  = 0,
-                .highValue = 4,
-                .stepSize  = 1,
-                .numValues = 5,
-                .numBits   = std::log2(5),  // 2.321...
-                .value     = 0,
-            },
-        }};
+        fieldDefHeaderList_ = std::array<FieldDef, 4>{};
+
+        fieldDefHeaderList_[0].name = "HdrTelemetryType";
+        fieldDefHeaderList_[0].lowValue = 0;
+        fieldDefHeaderList_[0].highValue = 1;
+        fieldDefHeaderList_[0].stepSize = 1;
+        fieldDefHeaderList_[0].numValues = 2;
+        fieldDefHeaderList_[0].numBits = 1;
+        fieldDefHeaderList_[0].value = 0;
+
+        fieldDefHeaderList_[1].name = "HdrRESERVED";
+        fieldDefHeaderList_[1].lowValue = 0;
+        fieldDefHeaderList_[1].highValue = 3;
+        fieldDefHeaderList_[1].stepSize = 1;
+        fieldDefHeaderList_[1].numValues = 4;
+        fieldDefHeaderList_[1].numBits = 2;
+        fieldDefHeaderList_[1].value = 0;
+
+        fieldDefHeaderList_[2].name = "HdrType";
+        fieldDefHeaderList_[2].lowValue = 0;
+        fieldDefHeaderList_[2].highValue = 15;
+        fieldDefHeaderList_[2].stepSize = 1;
+        fieldDefHeaderList_[2].numValues = 16;
+        fieldDefHeaderList_[2].numBits = 4;
+        fieldDefHeaderList_[2].value = 0;
+
+        fieldDefHeaderList_[3].name = "HdrSlot";
+        fieldDefHeaderList_[3].lowValue = 0;
+        fieldDefHeaderList_[3].highValue = 4;
+        fieldDefHeaderList_[3].stepSize = 1;
+        fieldDefHeaderList_[3].numValues = 5;
+        fieldDefHeaderList_[3].numBits = std::log2(5);
+        fieldDefHeaderList_[3].value = 0;
 
         canSetHdrType_ = true;
     }
@@ -142,7 +151,7 @@ public:
     // - The template-specified number of fields have already been configured
     // - The field name is a nullptr
     // - The field already exists
-    // - lowValue, highValue, or stepSize is too precise (more than 3 decimal places of precision)
+    // - lowValue, highValue, or stepSize is too precise (more than 4 decimal places of precision)
     // - lowValue >= highValue
     // - stepSize <= 0
     // - The stepSize does not evenly divide the range between lowValue and highValue
@@ -153,39 +162,7 @@ public:
                      double      highValue,
                      double      stepSize)
     {
-        static const double FACTOR = 1000;    // 3 decimal places
-
         bool retVal = true;
-
-        auto ScaleUp = [=](double value) {
-            int64_t valueScaledUp = 0;
-
-            if (value < 0)
-            {
-                valueScaledUp = (value * FACTOR) - 0.5;
-            }
-            else if (value > 0)
-            {
-                valueScaledUp = (value * FACTOR) + 0.5;
-            }
-
-            return valueScaledUp;
-        };
-
-        auto FieldIsTooPrecise = [&](double value){
-            int64_t valueScaledUp   = ScaleUp(value);
-            double  valueScaledBack = valueScaledUp / FACTOR;
-
-            double diff = fabs(valueScaledBack - value);
-
-            bool retVal = false;
-            if (diff > 0.000000001)    // billionth
-            {
-                retVal = true;
-            }
-
-            return retVal;
-        };
 
         if (CanFitOneMore() == false)
         {
@@ -237,33 +214,13 @@ public:
         }
         else
         {
-            // is there a integer-number number of divisions of the low-to-high
-            // range when incremented by the step size?
-            //
-            // due to floating point issues, this needs to be done in a way that scales the
-            // (potentially) decimal numbers into pure integer space. we know this is safe
-            // to do here because we already checked that the numbers are not any more
-            // precise than the amount we scale.
-            auto GetStepCount = [&](double lowValue, double highValue, double stepSize) -> uint32_t {
-                uint32_t retVal = 0;
+            SegmentDef segmentDef;
+            segmentDef.lowValue = lowValue;
+            segmentDef.highValue = highValue;
+            segmentDef.stepSize = stepSize;
+            segmentDef.numValues = GetNumValues(lowValue, highValue, stepSize);
 
-                int64_t lowValueScaledUpAsInt  = ScaleUp(lowValue);
-                int64_t highValueScaledUpAsInt = ScaleUp(highValue);
-                int64_t stepSizeScaledUpAsInt  = ScaleUp(stepSize);
-
-                double stepCount = ((double)(highValueScaledUpAsInt - lowValueScaledUpAsInt)) / stepSizeScaledUpAsInt;
-
-                if (stepCount == (uint32_t)stepCount)
-                {
-                    retVal = stepCount;
-                }
-
-                return retVal;
-            };
-
-            uint32_t stepCount = GetStepCount(lowValue, highValue, stepSize);
-
-            if (stepCount == 0)
+            if (segmentDef.numValues == 0)
             {
                 retVal = false;
 
@@ -273,8 +230,7 @@ public:
             {
                 FieldDef fd;
 
-                // known to be an integer value as checked previously
-                fd.numValues = stepCount + 1;
+                fd.numValues = segmentDef.numValues;
 
                 // calc bits used by this field
                 fd.numBits = std::log2(fd.numValues);
@@ -296,6 +252,8 @@ public:
                     fd.lowValue  = lowValue;
                     fd.highValue = highValue;
                     fd.stepSize  = stepSize;
+                    fd.segmentList[0] = segmentDef;
+                    fd.segmentCount = 1;
 
                     // set initial value to known-within-range
                     fd.value = lowValue;
@@ -472,8 +430,170 @@ public:
     enum class HdrType : uint8_t
     {
         USER_DEFINED = 0,
+        TRACKER_TELEMETRY = 1,
+        GPS_TELEMETRY = 2,
         VENDOR_DEFINED = 15,
     };
+
+    static const char *GetHdrTypeName(HdrType val)
+    {
+        const char *retVal = "Unknown";
+
+        switch (val)
+        {
+            case HdrType::USER_DEFINED:
+                retVal = "UserDefined";
+                break;
+            case HdrType::TRACKER_TELEMETRY:
+                retVal = "TrackerTelemetry";
+                break;
+            case HdrType::GPS_TELEMETRY:
+                retVal = "GpsTelemetry";
+                break;
+            case HdrType::VENDOR_DEFINED:
+                retVal = "VendorDefined";
+                break;
+            default:
+                break;
+        }
+
+        return retVal;
+    }
+
+    bool DefineField(const char *fieldName,
+                     const SegmentDef *segmentList,
+                     uint8_t           segmentCount)
+    {
+        bool retVal = true;
+
+        if (CanFitOneMore() == false)
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "Can not fit another field";
+        }
+        else if (fieldName == nullptr)
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "Field name is nullptr";
+        }
+        else if (FieldDefExists(fieldName))
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "Field already exists";
+        }
+        else if (segmentList == nullptr || segmentCount == 0)
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "Segment list is empty";
+        }
+        else if (segmentCount > MAX_SEGMENT_COUNT)
+        {
+            retVal = false;
+
+            fieldDefFailReason_ = "Segment list exceeds supported size";
+        }
+        else
+        {
+            FieldDef fd{};
+            fd.name = fieldName;
+            fd.isSegmented = true;
+            fd.segmentCount = segmentCount;
+
+            for (uint8_t i = 0; i < segmentCount && retVal; ++i)
+            {
+                const SegmentDef &inputSegment = segmentList[i];
+
+                if (FieldIsTooPrecise(inputSegment.lowValue))
+                {
+                    retVal = false;
+                    fieldDefFailReason_ = "Low value is too precise";
+                }
+                else if (FieldIsTooPrecise(inputSegment.highValue))
+                {
+                    retVal = false;
+                    fieldDefFailReason_ = "High value is too precise";
+                }
+                else if (FieldIsTooPrecise(inputSegment.stepSize))
+                {
+                    retVal = false;
+                    fieldDefFailReason_ = "Step size is too precise";
+                }
+                else if (inputSegment.lowValue >= inputSegment.highValue)
+                {
+                    retVal = false;
+                    fieldDefFailReason_ = "Low value >= High value";
+                }
+                else if (inputSegment.stepSize <= 0)
+                {
+                    retVal = false;
+                    fieldDefFailReason_ = "Step size <= 0";
+                }
+                else
+                {
+                    SegmentDef segment = inputSegment;
+                    segment.numValues = GetNumValues(segment.lowValue, segment.highValue, segment.stepSize);
+
+                    if (segment.numValues == 0)
+                    {
+                        retVal = false;
+                        fieldDefFailReason_ = "Step size does not evenly divide the low-to-high range";
+                    }
+                    else if (i > 0 && ScaleUp(segment.lowValue) < ScaleUp(fd.segmentList[i - 1].highValue))
+                    {
+                        retVal = false;
+                        fieldDefFailReason_ = "Segment ranges overlap";
+                    }
+                    else
+                    {
+                        fd.segmentList[i] = segment;
+
+                        uint32_t additionalValues = segment.numValues;
+                        if (i > 0 && ScaleUp(segment.lowValue) == ScaleUp(fd.segmentList[i - 1].highValue))
+                        {
+                            --additionalValues;
+                        }
+
+                        fd.numValues += additionalValues;
+                    }
+                }
+            }
+
+            if (retVal)
+            {
+                fd.lowValue = fd.segmentList[0].lowValue;
+                fd.highValue = fd.segmentList[segmentCount - 1].highValue;
+                fd.stepSize = 0;
+                fd.numBits = std::log2(fd.numValues);
+
+                if (numBitsSum_ + fd.numBits > MAX_BITS)
+                {
+                    retVal = false;
+                    fieldDefFailReason_ = "Field overflows available bits";
+                }
+                else
+                {
+                    numBitsSum_ += fd.numBits;
+                    fd.value = fd.lowValue;
+
+                    fieldDefUserDefinedList_[fieldDefUserDefinedListIdx_] = fd;
+                    ++fieldDefUserDefinedListIdx_;
+                }
+            }
+        }
+
+        return retVal;
+    }
+
+    template <size_t SEGMENT_COUNT>
+    bool DefineField(const char *fieldName,
+                     const std::array<SegmentDef, SEGMENT_COUNT> &segmentList)
+    {
+        return DefineField(fieldName, segmentList.data(), static_cast<uint8_t>(segmentList.size()));
+    }
 
     void SetCanSetHdrType(bool val)
     {
@@ -511,7 +631,7 @@ public:
                 FieldDef &fd = fieldDefList[i];
 
                 // calculate field number for packing
-                uint32_t fieldNumber = (uint32_t)std::round((fd.value - fd.lowValue) / fd.stepSize);
+                uint32_t fieldNumber = GetFieldNumber(fd, fd.value);
 
                 // pack
                 val *= fd.numValues; val += fieldNumber;
@@ -635,7 +755,7 @@ public:
                 uint32_t fieldNumber = val % fd.numValues;
 
                 // set field value
-                fd.value = fd.lowValue + (fieldNumber * fd.stepSize);
+                fd.value = GetValueForFieldNumber(fd, fieldNumber);
 
                 // shed
                 val /= fd.numValues;
@@ -656,6 +776,125 @@ public:
 
 
 private:
+
+    static constexpr int64_t SCALE_FACTOR = 10000;
+
+    static int64_t ScaleUp(double value)
+    {
+        int64_t valueScaledUp = 0;
+
+        if (value < 0)
+        {
+            valueScaledUp = (value * SCALE_FACTOR) - 0.5;
+        }
+        else if (value > 0)
+        {
+            valueScaledUp = (value * SCALE_FACTOR) + 0.5;
+        }
+
+        return valueScaledUp;
+    }
+
+    static bool FieldIsTooPrecise(double value)
+    {
+        int64_t valueScaledUp   = ScaleUp(value);
+        double  valueScaledBack = static_cast<double>(valueScaledUp) / SCALE_FACTOR;
+
+        double diff = fabs(valueScaledBack - value);
+
+        return diff > 0.000000001;
+    }
+
+    static uint32_t GetNumValues(double lowValue, double highValue, double stepSize)
+    {
+        uint32_t retVal = 0;
+
+        int64_t lowValueScaledUpAsInt  = ScaleUp(lowValue);
+        int64_t highValueScaledUpAsInt = ScaleUp(highValue);
+        int64_t stepSizeScaledUpAsInt  = ScaleUp(stepSize);
+
+        double stepCount = ((double)(highValueScaledUpAsInt - lowValueScaledUpAsInt)) / stepSizeScaledUpAsInt;
+
+        if (stepCount == (uint32_t)stepCount)
+        {
+            retVal = static_cast<uint32_t>(stepCount) + 1;
+        }
+
+        return retVal;
+    }
+
+    static uint32_t GetFieldNumber(const FieldDef &fd, double value)
+    {
+        uint32_t retVal = 0;
+
+        if (fd.isSegmented == false)
+        {
+            retVal = (uint32_t)std::round((value - fd.lowValue) / fd.stepSize);
+        }
+        else
+        {
+            double bestDiff = INFINITY;
+            double bestValue = fd.lowValue;
+            uint32_t candidateFieldNumber = 0;
+
+            for (uint8_t segmentIdx = 0; segmentIdx < fd.segmentCount; ++segmentIdx)
+            {
+                const SegmentDef &segment = fd.segmentList[segmentIdx];
+                uint32_t offset = (segmentIdx > 0 &&
+                                   ScaleUp(segment.lowValue) == ScaleUp(fd.segmentList[segmentIdx - 1].highValue)) ? 1 : 0;
+
+                for (uint32_t i = offset; i < segment.numValues; ++i)
+                {
+                    double candidateValue = segment.lowValue + (segment.stepSize * i);
+                    double diff = std::fabs(candidateValue - value);
+
+                    if (diff < bestDiff || (diff == bestDiff && candidateValue < bestValue))
+                    {
+                        bestDiff = diff;
+                        bestValue = candidateValue;
+                        retVal = candidateFieldNumber;
+                    }
+
+                    ++candidateFieldNumber;
+                }
+            }
+        }
+
+        return retVal;
+    }
+
+    static double GetValueForFieldNumber(const FieldDef &fd, uint32_t fieldNumber)
+    {
+        double retVal = 0;
+
+        if (fd.isSegmented == false)
+        {
+            retVal = fd.lowValue + (fieldNumber * fd.stepSize);
+        }
+        else
+        {
+            uint32_t candidateFieldNumber = 0;
+
+            for (uint8_t segmentIdx = 0; segmentIdx < fd.segmentCount; ++segmentIdx)
+            {
+                const SegmentDef &segment = fd.segmentList[segmentIdx];
+                uint32_t offset = (segmentIdx > 0 &&
+                                   ScaleUp(segment.lowValue) == ScaleUp(fd.segmentList[segmentIdx - 1].highValue)) ? 1 : 0;
+
+                for (uint32_t i = offset; i < segment.numValues; ++i)
+                {
+                    if (candidateFieldNumber == fieldNumber)
+                    {
+                        return segment.lowValue + (segment.stepSize * i);
+                    }
+
+                    ++candidateFieldNumber;
+                }
+            }
+        }
+
+        return retVal;
+    }
 
     FieldDef *GetFieldDefFrom(const char *fieldName, FieldDef *fieldDefList, uint8_t fieldDefListLen)
     {
