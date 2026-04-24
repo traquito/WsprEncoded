@@ -7,11 +7,11 @@ using namespace std;
 
 bool TestDefaults()
 {
-    WsprMessageTelemetryExtendedGpsTelemetry<> msg;
+    WsprMessageTelemetryExtendedGpsTelemetry msg;
 
     bool retVal =
         msg.GetFieldDefListLen() == 4 &&
-        msg.GetHdrType() == WsprMessageTelemetryExtendedGpsTelemetry<>::HdrType::GPS_TELEMETRY &&
+        msg.GetHdrType() == WsprMessageTelemetryExtendedGpsTelemetry::HdrType::GPS_TELEMETRY &&
         msg.GetLatitudeIdx() == 0 &&
         msg.GetLongitudeIdx() == 0 &&
         msg.GetAltitudeFt() == 0 &&
@@ -24,7 +24,7 @@ bool TestDefaults()
 
 bool TestEncodeDecode()
 {
-    WsprMessageTelemetryExtendedGpsTelemetry<> msg1;
+    WsprMessageTelemetryExtendedGpsTelemetry msg1;
     msg1.SetId13("Q5");
     msg1.SetHdrSlot(3);
     msg1.SetLatitudeIdx(92);
@@ -33,7 +33,7 @@ bool TestEncodeDecode()
     msg1.SetSpeedMPH(143);
     msg1.Encode();
 
-    WsprMessageTelemetryExtendedGpsTelemetry<> msg2;
+    WsprMessageTelemetryExtendedGpsTelemetry msg2;
     msg2.SetCallsign(msg1.GetCallsign());
     msg2.SetGrid4(msg1.GetGrid4());
     msg2.SetPowerDbm(msg1.GetPowerDbm());
@@ -41,7 +41,7 @@ bool TestEncodeDecode()
 
     bool retVal =
         decodeOk == true &&
-        msg2.GetHdrType() == WsprMessageTelemetryExtendedGpsTelemetry<>::HdrType::GPS_TELEMETRY &&
+        msg2.GetHdrType() == WsprMessageTelemetryExtendedGpsTelemetry::HdrType::GPS_TELEMETRY &&
         msg2.GetHdrSlot() == 3 &&
         msg2.GetLatitudeIdx() == 92 &&
         msg2.GetLongitudeIdx() == 77 &&
@@ -55,8 +55,8 @@ bool TestEncodeDecode()
 
 bool TestLocationHelpers()
 {
-    WsprMessageTelemetryExtendedGpsTelemetry<> msg;
-    WsprMessageTelemetryExtendedGpsTelemetry<>::Location location;
+    WsprMessageTelemetryExtendedGpsTelemetry msg;
+    WsprMessageTelemetryExtendedGpsTelemetry::Location location;
 
     bool encodeOk = msg.EncodeLocationToFieldValues(40.742, -70.032, location);
 

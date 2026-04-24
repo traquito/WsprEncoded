@@ -4,8 +4,7 @@
 #include "WsprMessageTelemetryExtendedTrackerTelemetryBase.h"
 
 
-template <uint8_t FIELD_COUNT = 7>
 class WsprMessageTelemetryExtendedTrackerTelemetry
-: public WsprMessageTelemetryExtendedTrackerTelemetryBase<WsprMessageTelemetryExtendedCommonDynamic<FIELD_COUNT>, FIELD_COUNT>
+: public WsprMessageTelemetryExtendedTrackerTelemetryBase<WsprMessageTelemetryExtendedCommonDynamic<7>, 7>
 {
 };

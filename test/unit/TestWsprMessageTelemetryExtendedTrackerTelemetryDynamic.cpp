@@ -3,7 +3,7 @@
 
 int main()
 {
-    WsprMessageTelemetryExtendedTrackerTelemetry<7> codec;
+    WsprMessageTelemetryExtendedTrackerTelemetry codec;
 
-    return !(codec.GetHdrType() == WsprMessageTelemetryExtendedTrackerTelemetry<7>::HdrType::TRACKER_TELEMETRY);
+    return !(codec.GetHdrType() == WsprMessageTelemetryExtendedTrackerTelemetry::HdrType::TRACKER_TELEMETRY);
 }

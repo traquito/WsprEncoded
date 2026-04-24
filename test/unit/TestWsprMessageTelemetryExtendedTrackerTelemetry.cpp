@@ -9,7 +9,7 @@ bool TestHdrTypeIsRestricted()
 {
     bool retVal = true;
 
-    WsprMessageTelemetryExtendedTrackerTelemetry<> msg;
+    WsprMessageTelemetryExtendedTrackerTelemetry msg;
 
     bool ok = msg.Set("HdrType", 0);
 
@@ -22,16 +22,16 @@ bool TestHdrTypeIsRestricted()
 
 bool TestDefaults()
 {
-    WsprMessageTelemetryExtendedTrackerTelemetry<> msg;
+    WsprMessageTelemetryExtendedTrackerTelemetry msg;
 
     bool retVal =
         msg.GetFieldDefListLen() == 7 &&
-        msg.GetHdrType() == WsprMessageTelemetryExtendedTrackerTelemetry<>::HdrType::TRACKER_TELEMETRY &&
+        msg.GetHdrType() == WsprMessageTelemetryExtendedTrackerTelemetry::HdrType::TRACKER_TELEMETRY &&
         msg.GetId13Idx() == 0 &&
         msg.GetTempF() == -80 &&
         fabs(msg.GetVoltageV() - 2.7) < 0.0000001 &&
         msg.GetWindowSeqNo() == 1 &&
-        msg.GetGpsLockType() == WsprMessageTelemetryExtendedTrackerTelemetry<>::GpsLockType::NO_LOCK &&
+        msg.GetGpsLockType() == WsprMessageTelemetryExtendedTrackerTelemetry::GpsLockType::NO_LOCK &&
         msg.GetSubLatIdx() == 0 &&
         msg.GetSubLngIdx() == 0;
 
@@ -42,19 +42,19 @@ bool TestDefaults()
 
 bool TestEncodeDecode()
 {
-    WsprMessageTelemetryExtendedTrackerTelemetry<> msg1;
+    WsprMessageTelemetryExtendedTrackerTelemetry msg1;
     msg1.SetId13("Q5");
     msg1.SetHdrSlot(4);
     msg1.SetId13Idx(3);
     msg1.SetTempF(23);
     msg1.SetVoltageV(4.12);
     msg1.SetWindowSeqNo(8);
-    msg1.SetGpsLockType(WsprMessageTelemetryExtendedTrackerTelemetry<>::GpsLockType::LOCATION_LOCK);
+    msg1.SetGpsLockType(WsprMessageTelemetryExtendedTrackerTelemetry::GpsLockType::LOCATION_LOCK);
     msg1.SetSubLatIdx(8);
     msg1.SetSubLngIdx(20);
     msg1.Encode();
 
-    WsprMessageTelemetryExtendedTrackerTelemetry<> msg2;
+    WsprMessageTelemetryExtendedTrackerTelemetry msg2;
     msg2.SetCallsign(msg1.GetCallsign());
     msg2.SetGrid4(msg1.GetGrid4());
     msg2.SetPowerDbm(msg1.GetPowerDbm());
@@ -62,13 +62,13 @@ bool TestEncodeDecode()
 
     bool retVal =
         decodeOk == true &&
-        msg2.GetHdrType() == WsprMessageTelemetryExtendedTrackerTelemetry<>::HdrType::TRACKER_TELEMETRY &&
+        msg2.GetHdrType() == WsprMessageTelemetryExtendedTrackerTelemetry::HdrType::TRACKER_TELEMETRY &&
         msg2.GetHdrSlot() == 4 &&
         msg2.GetId13Idx() == 3 &&
         msg2.GetTempF() == 25 &&
         fabs(msg2.GetVoltageV() - 4.12) < 0.0000001 &&
         msg2.GetWindowSeqNo() == 2 &&
-        msg2.GetGpsLockType() == WsprMessageTelemetryExtendedTrackerTelemetry<>::GpsLockType::LOCATION_LOCK &&
+        msg2.GetGpsLockType() == WsprMessageTelemetryExtendedTrackerTelemetry::GpsLockType::LOCATION_LOCK &&
         msg2.GetSubLatIdx() == 8 &&
         msg2.GetSubLngIdx() == 20;
 
@@ -79,8 +79,8 @@ bool TestEncodeDecode()
 
 bool TestLocationHelpers()
 {
-    WsprMessageTelemetryExtendedTrackerTelemetry<> msg;
-    WsprMessageTelemetryExtendedTrackerTelemetry<>::Location location;
+    WsprMessageTelemetryExtendedTrackerTelemetry msg;
+    WsprMessageTelemetryExtendedTrackerTelemetry::Location location;
 
     bool encodeOk = msg.EncodeLocationToFieldValues(92, 77, 40.742, -70.032, location);
 
@@ -104,10 +104,10 @@ bool TestLocationHelpers()
 bool TestWindowNormalization()
 {
     bool retVal =
-        WsprMessageTelemetryExtendedTrackerTelemetry<>::NormalizeWindowSeqNo(1) == 1 &&
-        WsprMessageTelemetryExtendedTrackerTelemetry<>::NormalizeWindowSeqNo(6) == 6 &&
-        WsprMessageTelemetryExtendedTrackerTelemetry<>::NormalizeWindowSeqNo(7) == 1 &&
-        WsprMessageTelemetryExtendedTrackerTelemetry<>::NormalizeWindowSeqNo(0) == 6;
+        WsprMessageTelemetryExtendedTrackerTelemetry::NormalizeWindowSeqNo(1) == 1 &&
+        WsprMessageTelemetryExtendedTrackerTelemetry::NormalizeWindowSeqNo(6) == 6 &&
+        WsprMessageTelemetryExtendedTrackerTelemetry::NormalizeWindowSeqNo(7) == 1 &&
+        WsprMessageTelemetryExtendedTrackerTelemetry::NormalizeWindowSeqNo(0) == 6;
 
     cout << "TestWindowNormalization: " << retVal << endl;
 

@@ -3,7 +3,7 @@
 
 int main()
 {
-    WsprMessageTelemetryExtendedGpsTelemetry<4> codec;
+    WsprMessageTelemetryExtendedGpsTelemetry codec;
 
-    return !(codec.GetHdrType() == WsprMessageTelemetryExtendedGpsTelemetry<4>::HdrType::GPS_TELEMETRY);
+    return !(codec.GetHdrType() == WsprMessageTelemetryExtendedGpsTelemetry::HdrType::GPS_TELEMETRY);
 }

@@ -4,8 +4,7 @@
 #include "WsprMessageTelemetryExtendedGpsTelemetryBase.h"
 
 
-template <uint8_t FIELD_COUNT = 4>
 class WsprMessageTelemetryExtendedGpsTelemetry
-: public WsprMessageTelemetryExtendedGpsTelemetryBase<WsprMessageTelemetryExtendedCommonDynamic<FIELD_COUNT>, FIELD_COUNT>
+: public WsprMessageTelemetryExtendedGpsTelemetryBase<WsprMessageTelemetryExtendedCommonDynamic<4>, 4>
 {
 };
