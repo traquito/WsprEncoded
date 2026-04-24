@@ -97,7 +97,7 @@ public:
         return Base::Get("Speed");
     }
 
-    bool EncodeLocationToFieldValues(double latitude, double longitude, Location &location)
+    static bool EncodeLocationToFieldValues(double latitude, double longitude, Location &location)
     {
         if (!std::isfinite(latitude) || !std::isfinite(longitude))
         {
@@ -123,7 +123,7 @@ public:
         return DecodeFieldValuesToLocation(GetLatitudeIdx(), GetLongitudeIdx(), latitude, longitude);
     }
 
-    bool DecodeFieldValuesToLocation(uint8_t latitudeIdx, uint8_t longitudeIdx, double &latitude, double &longitude)
+    static bool DecodeFieldValuesToLocation(uint8_t latitudeIdx, uint8_t longitudeIdx, double &latitude, double &longitude)
     {
         double south = 0.0;
         double west = 0.0;
@@ -141,12 +141,12 @@ public:
         return true;
     }
 
-    bool GetLocationBoundsFromFieldValues(uint8_t latitudeIdx,
-                                          uint8_t longitudeIdx,
-                                          double &south,
-                                          double &west,
-                                          double &north,
-                                          double &east)
+    static bool GetLocationBoundsFromFieldValues(uint8_t latitudeIdx,
+                                                 uint8_t longitudeIdx,
+                                                 double &south,
+                                                 double &west,
+                                                 double &north,
+                                                 double &east)
     {
         if (latitudeIdx > 126 || longitudeIdx > 253)
         {

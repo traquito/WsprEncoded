@@ -151,11 +151,11 @@ public:
         return (360.0 / 254.0) / 34.0;
     }
 
-    bool EncodeLocationToFieldValues(uint8_t gtLatitudeIdx,
-                                     uint8_t gtLongitudeIdx,
-                                     double latitude,
-                                     double longitude,
-                                     Location &location)
+    static bool EncodeLocationToFieldValues(uint8_t gtLatitudeIdx,
+                                            uint8_t gtLongitudeIdx,
+                                            double latitude,
+                                            double longitude,
+                                            Location &location)
     {
         double south = 0.0;
         double west = 0.0;
@@ -191,12 +191,12 @@ public:
         return DecodeFieldValuesToLocation(gtLatitudeIdx, gtLongitudeIdx, GetSubLatIdx(), GetSubLngIdx(), latitude, longitude);
     }
 
-    bool DecodeFieldValuesToLocation(uint8_t gtLatitudeIdx,
-                                     uint8_t gtLongitudeIdx,
-                                     uint8_t subLatIdx,
-                                     uint8_t subLngIdx,
-                                     double &latitude,
-                                     double &longitude)
+    static bool DecodeFieldValuesToLocation(uint8_t gtLatitudeIdx,
+                                            uint8_t gtLongitudeIdx,
+                                            uint8_t subLatIdx,
+                                            uint8_t subLngIdx,
+                                            double &latitude,
+                                            double &longitude)
     {
         double south = 0.0;
         double west = 0.0;
@@ -214,14 +214,14 @@ public:
         return true;
     }
 
-    bool GetLocationBoundsFromFieldValues(uint8_t gtLatitudeIdx,
-                                          uint8_t gtLongitudeIdx,
-                                          uint8_t subLatIdx,
-                                          uint8_t subLngIdx,
-                                          double &south,
-                                          double &west,
-                                          double &north,
-                                          double &east)
+    static bool GetLocationBoundsFromFieldValues(uint8_t gtLatitudeIdx,
+                                                 uint8_t gtLongitudeIdx,
+                                                 uint8_t subLatIdx,
+                                                 uint8_t subLngIdx,
+                                                 double &south,
+                                                 double &west,
+                                                 double &north,
+                                                 double &east)
     {
         double gtSouth = 0.0;
         double gtWest = 0.0;
