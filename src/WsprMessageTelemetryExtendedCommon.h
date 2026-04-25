@@ -283,6 +283,42 @@ public:
         return fieldDefUserDefinedList_;
     }
 
+    const FieldDef *GetFieldDefByName(const char *fieldName) const
+    {
+        auto GetFieldDefFromConst = [](const char *fieldName, const FieldDef *fieldDefList, uint8_t fieldDefListLen) -> const FieldDef * {
+            const FieldDef *retVal = nullptr;
+
+            if (fieldName)
+            {
+                for (int i = 0; i < fieldDefListLen; ++i)
+                {
+                    const FieldDef &fd = fieldDefList[i];
+
+                    if (strcmp(fieldName, fd.name) == 0)
+                    {
+                        retVal = &fd;
+                        break;
+                    }
+                }
+            }
+
+            return retVal;
+        };
+
+        const FieldDef *retVal = GetFieldDefFromConst(fieldName,
+                                                      static_cast<const FieldDef *>(fieldDefHeaderList_.data()),
+                                                      fieldDefHeaderList_.size());
+
+        if (retVal == nullptr)
+        {
+            retVal = GetFieldDefFromConst(fieldName,
+                                          static_cast<const FieldDef *>(fieldDefUserDefinedList_.data()),
+                                          fieldDefUserDefinedListIdx_);
+        }
+
+        return retVal;
+    }
+
     // Set the value of a configured field.
     //
     // The value parameter is a double to make accepting a wide range
@@ -833,6 +869,7 @@ private:
         }
         else
         {
+            static constexpr double TIE_EPSILON = 1e-9;
             double bestDiff = INFINITY;
             double bestValue = fd.lowValue;
             uint32_t candidateFieldNumber = 0;
@@ -848,7 +885,8 @@ private:
                     double candidateValue = segment.lowValue + (segment.stepSize * i);
                     double diff = std::fabs(candidateValue - value);
 
-                    if (diff < bestDiff || (diff == bestDiff && candidateValue < bestValue))
+                    if (diff < bestDiff ||
+                        (std::fabs(diff - bestDiff) < TIE_EPSILON && candidateValue > bestValue))
                     {
                         bestDiff = diff;
                         bestValue = candidateValue;

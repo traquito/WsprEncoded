@@ -12,6 +12,33 @@ class WsprMessageTelemetryBasic
 {
 public:
 
+    struct FieldRange
+    {
+        double lowValue;
+        double highValue;
+        double stepSize;
+    };
+
+    static constexpr FieldRange GetAltitudeMetersRange()
+    {
+        return { 0, 21340, 20 };
+    }
+
+    static constexpr FieldRange GetTemperatureCelsiusRange()
+    {
+        return { -50, 39, 1 };
+    }
+
+    static constexpr FieldRange GetVoltageVoltsRange()
+    {
+        return { 3.00, 4.95, 0.05 };
+    }
+
+    static constexpr FieldRange GetSpeedKnotsRange()
+    {
+        return { 0, 82, 2 };
+    }
+
     WsprMessageTelemetryBasic()
     {
         Reset();
@@ -71,9 +98,10 @@ public:
     bool SetAltitudeMeters(int32_t altitudeMeters)
     {
         bool retVal = true;
+        constexpr FieldRange range = GetAltitudeMetersRange();
 
-        if      (altitudeMeters < 0)     { altitudeMeters = 0;     retVal = false; }
-        else if (altitudeMeters > 21340) { altitudeMeters = 21340; retVal = false; }
+        if      (altitudeMeters < range.lowValue)  { altitudeMeters = static_cast<int32_t>(range.lowValue);  retVal = false; }
+        else if (altitudeMeters > range.highValue) { altitudeMeters = static_cast<int32_t>(range.highValue); retVal = false; }
 
         altitudeMeters_ = altitudeMeters;
 
@@ -90,9 +118,10 @@ public:
     bool SetTemperatureCelsius(int32_t temperatureCelsius)
     {
         bool retVal = true;
+        constexpr FieldRange range = GetTemperatureCelsiusRange();
 
-        if      (temperatureCelsius < -50) { temperatureCelsius = -50; retVal = false; }
-        else if (temperatureCelsius >  39) { temperatureCelsius =  39; retVal = false; }
+        if      (temperatureCelsius < range.lowValue)  { temperatureCelsius = static_cast<int32_t>(range.lowValue);  retVal = false; }
+        else if (temperatureCelsius > range.highValue) { temperatureCelsius = static_cast<int32_t>(range.highValue); retVal = false; }
 
         temperatureCelsius_ = temperatureCelsius;
 
@@ -109,9 +138,10 @@ public:
     bool SetVoltageVolts(double voltageVolts)
     {
         bool retVal = true;
+        constexpr FieldRange range = GetVoltageVoltsRange();
 
-        if      (voltageVolts < 3.00) { voltageVolts = 3.00; retVal = false; }
-        else if (voltageVolts > 4.95) { voltageVolts = 4.95; retVal = false; }
+        if      (voltageVolts < range.lowValue)  { voltageVolts = range.lowValue;  retVal = false; }
+        else if (voltageVolts > range.highValue) { voltageVolts = range.highValue; retVal = false; }
 
         voltageVolts_ = voltageVolts;
 
@@ -128,9 +158,10 @@ public:
     bool SetSpeedKnots(int32_t speedKnots)
     {
         bool retVal = true;
+        constexpr FieldRange range = GetSpeedKnotsRange();
 
-        if      (speedKnots <  0) { speedKnots =  0; retVal = false; }
-        else if (speedKnots > 82) { speedKnots = 82; retVal = false; }
+        if      (speedKnots < range.lowValue)  { speedKnots = static_cast<int32_t>(range.lowValue);  retVal = false; }
+        else if (speedKnots > range.highValue) { speedKnots = static_cast<int32_t>(range.highValue); retVal = false; }
 
         speedKnots_ = speedKnots;
 

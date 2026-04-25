@@ -864,6 +864,44 @@ bool TestSegmentedField()
     return retVal;
 }
 
+bool TestSegmentedFieldTieRoundsUp()
+{
+    using Msg = WsprMessageTelemetryExtendedCommon<>;
+    using SegmentDef = Msg::SegmentDef;
+
+    const std::array<SegmentDef, 2> segments = {{
+        { 0, 20, 10 },
+        { 20, 50, 15 },
+    }};
+
+    Msg msg1;
+    bool defineOk = msg1.DefineField("TieField", segments);
+    bool setOk = msg1.Set("TieField", 5);
+
+    msg1.SetId13("Q5");
+    msg1.SetHdrSlot(2);
+    msg1.Encode();
+
+    Msg msg2;
+    msg2.DefineField("TieField", segments);
+    msg2.SetCallsign(msg1.GetCallsign());
+    msg2.SetGrid4(msg1.GetGrid4());
+    msg2.SetPowerDbm(msg1.GetPowerDbm());
+
+    bool decodeOk = msg2.Decode();
+    double decodedValue = msg2.Get("TieField");
+
+    bool retVal =
+        defineOk == true &&
+        setOk == true &&
+        decodeOk == true &&
+        decodedValue == 10;
+
+    cout << "TestSegmentedFieldTieRoundsUp: " << retVal << endl;
+
+    return retVal;
+}
+
 
 int main()
 {
@@ -882,6 +920,7 @@ int main()
     retVal &= TestNamedHeaderFields();
     retVal &= TestGetFieldDefList();
     retVal &= TestSegmentedField();
+    retVal &= TestSegmentedFieldTieRoundsUp();
 
     return !retVal;
 }
