@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cmath>
+#include <cstring>
 #include <string>
 #include <vector>
 using namespace std;
@@ -233,6 +235,120 @@ bool TestSetGrid56()
     return retVal;
 }
 
+bool TestEncodeQuantizationHalfUp()
+{
+    struct QuantizationTest
+    {
+        int32_t altitudeMetersIn;
+        double  voltageVoltsIn;
+        int32_t speedKnotsIn;
+        int32_t expectedAltitudeMeters;
+        double  expectedVoltageVolts;
+        int32_t expectedSpeedKnots;
+        string  comment;
+    };
+
+    vector<QuantizationTest> testList = {
+        { 10, 4.225, 1, 20, 4.25, 2, "lower voltage midpoint rounds up" },
+        { 10, 4.475, 1, 20, 4.50, 2, "upper voltage midpoint rounds up" },
+    };
+
+    bool retVal = true;
+
+    for (const auto &test : testList)
+    {
+        WsprMessageTelemetryBasic encoded;
+        encoded.SetId13("Q7");
+        encoded.SetGrid56("PP");
+        encoded.SetAltitudeMeters(test.altitudeMetersIn);
+        encoded.SetTemperatureCelsius(21);
+        encoded.SetVoltageVolts(test.voltageVoltsIn);
+        encoded.SetSpeedKnots(test.speedKnotsIn);
+        encoded.SetGpsIsValid(true);
+        encoded.Encode();
+
+        WsprMessageTelemetryBasic decoded;
+        decoded.SetCallsign(encoded.GetCallsign());
+        decoded.SetGrid4(encoded.GetGrid4());
+        decoded.SetPowerDbm(encoded.GetPowerDbm());
+        decoded.Decode();
+
+        bool ok = true;
+        if (decoded.GetAltitudeMeters() != test.expectedAltitudeMeters)
+        {
+            ok = false;
+            cout << "ERR: Quantized altitude expected \"" << test.expectedAltitudeMeters
+                 << "\" but got \"" << decoded.GetAltitudeMeters()
+                 << "\" (" << test.comment << ")" << endl;
+        }
+        if (std::fabs(decoded.GetVoltageVolts() - test.expectedVoltageVolts) > 0.000001)
+        {
+            ok = false;
+            cout << "ERR: Quantized voltage expected \"" << test.expectedVoltageVolts
+                 << "\" but got \"" << decoded.GetVoltageVolts()
+                 << "\" (" << test.comment << ")" << endl;
+        }
+        if (decoded.GetSpeedKnots() != test.expectedSpeedKnots)
+        {
+            ok = false;
+            cout << "ERR: Quantized speed expected \"" << test.expectedSpeedKnots
+                 << "\" but got \"" << decoded.GetSpeedKnots()
+                 << "\" (" << test.comment << ")" << endl;
+        }
+
+        retVal &= ok;
+    }
+
+    cout << "TestEncodeQuantizationHalfUp: " << retVal << endl;
+
+    return retVal;
+}
+
+bool TestGrid56FromLatLng()
+{
+    struct Grid56FromLatLngTest
+    {
+        double      latitude;
+        double      longitude;
+        const char *expectedGrid56;
+        string      comment;
+    };
+
+    vector<Grid56FromLatLngTest> testList = {
+        {  40.738059,  -74.036227, "XR", "New Jersey example",        },
+        { -26.301960,  -66.709667, "PQ", "Argentina example",         },
+        { -31.951585,  115.824861, "VB", "Australia example",         },
+        {  10.813707,  106.609537, "HT", "Vietnam example",           },
+        { -90.000000, -180.000000, "AA", "southwest world boundary",  },
+        {  90.000000,  180.000000, "XX", "northeast world boundary",  },
+    };
+
+    bool retVal = true;
+
+    for (const auto &test : testList)
+    {
+        char grid56[3] = { 0 };
+        bool ok = WsprMessageTelemetryBasic::Grid56FromLatLng(test.latitude, test.longitude, grid56, sizeof(grid56));
+        if (!ok || strcmp(grid56, test.expectedGrid56) != 0)
+        {
+            retVal = false;
+            cout << "ERR: Got " << grid56 << " with ok=" << ok
+                 << ", but expected " << test.expectedGrid56
+                 << " (" << test.comment << ")" << endl;
+        }
+    }
+
+    char grid56[3] = { 0 };
+    retVal &= CheckErr(InputTest<char *, bool>{ nullptr, false, "nullptr output buffer" },
+                       WsprMessageTelemetryBasic::Grid56FromLatLng(0.0, 0.0, nullptr, sizeof(grid56)));
+    retVal &= CheckErr(InputTest<size_t, bool>{ 2, false, "output buffer too small" },
+                       WsprMessageTelemetryBasic::Grid56FromLatLng(0.0, 0.0, grid56, 2));
+
+    cout << "Grid56FromLatLng: " << retVal << endl;
+
+    return retVal;
+}
+
 bool TestSetAltitudeMeters()
 {
     vector<InputTest<int32_t, bool>> testList = {
@@ -331,6 +447,7 @@ bool TestSetters()
     bool retVal = true;
 
     retVal &= TestSetGrid56();
+    retVal &= TestGrid56FromLatLng();
     retVal &= TestSetAltitudeMeters();
     retVal &= TestSetTemperatureCelsius();
     retVal &= TestSetVoltageVolts();
@@ -345,6 +462,7 @@ int main()
 
     retVal &= TestSetters();
     retVal &= TestEncode();
+    retVal &= TestEncodeQuantizationHalfUp();
     retVal &= TestDecode();
 
     return !retVal;

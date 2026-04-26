@@ -94,6 +94,47 @@ public:
         return (const char *)grid56_.data();
     }
 
+    static bool Grid56FromLatLngDegMillionths(int32_t latDegMillionths,
+                                              int32_t lngDegMillionths,
+                                              char *grid56,
+                                              size_t grid56Capacity)
+    {
+        char grid6[7] = { 0 };
+        if (!grid56 || grid56Capacity < 3)
+        {
+            return false;
+        }
+        if (!WsprMessageRegularType1::Grid6FromLatLngDegMillionths(latDegMillionths, lngDegMillionths, grid6, sizeof(grid6)))
+        {
+            return false;
+        }
+
+        grid56[0] = grid6[4];
+        grid56[1] = grid6[5];
+        grid56[2] = '\0';
+
+        return true;
+    }
+
+    static bool Grid56FromLatLng(double latitude, double longitude, char *grid56, size_t grid56Capacity)
+    {
+        char grid6[7] = { 0 };
+        if (!grid56 || grid56Capacity < 3)
+        {
+            return false;
+        }
+        if (!WsprMessageRegularType1::Grid6FromLatLng(latitude, longitude, grid6, sizeof(grid6)))
+        {
+            return false;
+        }
+
+        grid56[0] = grid6[4];
+        grid56[1] = grid6[5];
+        grid56[2] = '\0';
+
+        return true;
+    }
+
     // 0 through 21,340, steps of 20
     bool SetAltitudeMeters(int32_t altitudeMeters)
     {
@@ -225,7 +266,7 @@ private:
         uint8_t grid5Val = grid5 - 'A';
         uint8_t grid6Val = grid6 - 'A';
 
-        uint16_t altFracM = std::round((double)altitudeMeters_ / 20);
+        uint16_t altFracM = QuantizeNearestHalfUp(altitudeMeters_, 0.0, 20.0);
 
         // convert inputs into a big number
         uint32_t val = 0;
@@ -262,8 +303,8 @@ private:
     {
         // map input presentations onto input radix (numbers within their stated range of possibilities)
         uint8_t tempCNum      = temperatureCelsius_ - -50;
-        uint8_t voltageNum    = ((uint8_t)std::round(((voltageVolts_ * 100) - 300) / 5) + 20) % 40;
-        uint8_t speedKnotsNum = std::round((double)speedKnots_ / 2.0);
+        uint8_t voltageNum    = (QuantizeNearestHalfUp(voltageVolts_, 3.0, 0.05) + 20) % 40;
+        uint8_t speedKnotsNum = QuantizeNearestHalfUp(speedKnots_, 0.0, 2.0);
         uint8_t gpsValidNum   = gpsIsValid_ ? 1 : 0;
 
         // convert inputs into a big number
@@ -413,6 +454,11 @@ private:
 
 
 private:
+
+    static uint32_t QuantizeNearestHalfUp(double value, double low, double step)
+    {
+        return static_cast<uint32_t>(std::floor(((value - low) / step) + 0.5 + 1e-9));
+    }
 
     std::array<char, 3> grid56_;
     uint16_t            altitudeMeters_;
