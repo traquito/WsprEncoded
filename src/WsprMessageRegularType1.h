@@ -159,12 +159,12 @@ public:
         return retVal;
     }
 
-    static bool Grid4FromLatLngDegMillionths(int32_t latDegMillionths,
+    static bool Grid6FromLatLngDegMillionths(int32_t latDegMillionths,
                                              int32_t lngDegMillionths,
-                                             char *grid4,
-                                             size_t grid4Capacity)
+                                             char *grid6,
+                                             size_t grid6Capacity)
     {
-        if (!grid4 || grid4Capacity < GRID4_LEN + 1)
+        if (!grid6 || grid6Capacity < GRID6_LEN + 1)
         {
             return false;
         }
@@ -177,16 +177,63 @@ public:
         lat += (90  * 10000UL);
         lng += (180 * 10000UL);
 
-        grid4[0] = 'A' +   (lng / 200000);
-        grid4[1] = 'A' +   (lat / 100000);
-        grid4[2] = '0' +  ((lng % 200000) / 20000);
-        grid4[3] = '0' +  ((lat % 100000) / 10000);
+        grid6[0] = 'A' +   (lng / 200000);
+        grid6[1] = 'A' +   (lat / 100000);
+        grid6[2] = '0' +  ((lng % 200000) / 20000);
+        grid6[3] = '0' +  ((lat % 100000) / 10000);
+        grid6[4] = 'A' + (((lng % 200000) % 20000) / 834);
+        grid6[5] = 'A' + (((lat % 100000) % 10000) / 417);
+        grid6[6] = '\0';
+
+        return true;
+    }
+
+    static bool Grid4FromLatLngDegMillionths(int32_t latDegMillionths,
+                                             int32_t lngDegMillionths,
+                                             char *grid4,
+                                             size_t grid4Capacity)
+    {
+        char grid6[GRID6_LEN + 1] = { 0 };
+        if (!grid4 || grid4Capacity < GRID4_LEN + 1)
+        {
+            return false;
+        }
+        if (!Grid6FromLatLngDegMillionths(latDegMillionths, lngDegMillionths, grid6, sizeof(grid6)))
+        {
+            return false;
+        }
+
+        grid4[0] = grid6[0];
+        grid4[1] = grid6[1];
+        grid4[2] = grid6[2];
+        grid4[3] = grid6[3];
         grid4[4] = '\0';
 
         return true;
     }
 
     static bool Grid4FromLatLng(double latitude, double longitude, char *grid4, size_t grid4Capacity)
+    {
+        char grid6[GRID6_LEN + 1] = { 0 };
+        if (!Grid6FromLatLng(latitude, longitude, grid6, sizeof(grid6)))
+        {
+            return false;
+        }
+        if (!grid4 || grid4Capacity < GRID4_LEN + 1)
+        {
+            return false;
+        }
+
+        grid4[0] = grid6[0];
+        grid4[1] = grid6[1];
+        grid4[2] = grid6[2];
+        grid4[3] = grid6[3];
+        grid4[4] = '\0';
+
+        return true;
+    }
+
+    static bool Grid6FromLatLng(double latitude, double longitude, char *grid6, size_t grid6Capacity)
     {
         constexpr double LAT_MIN      = -90.0;
         constexpr double LAT_MAX_EXCL =  90.0;
@@ -222,7 +269,7 @@ public:
         int32_t latDegMillionths = static_cast<int32_t>(latitude * 1000000.0);
         int32_t lngDegMillionths = static_cast<int32_t>(longitude * 1000000.0);
 
-        return Grid4FromLatLngDegMillionths(latDegMillionths, lngDegMillionths, grid4, grid4Capacity);
+        return Grid6FromLatLngDegMillionths(latDegMillionths, lngDegMillionths, grid6, grid6Capacity);
     }
 
 
@@ -235,6 +282,7 @@ private:
     WsprUtl::CString callsign_;
 
     static const uint8_t GRID4_LEN = 4;
+    static const uint8_t GRID6_LEN = 6;
     char grid4Buf_[GRID4_LEN + 1];
     WsprUtl::CString grid4_;
 

@@ -104,18 +104,19 @@ bool TestGrid4FromLatLng()
         double      latitude;
         double      longitude;
         const char *expectedGrid4;
+        const char *expectedGrid6;
         string      comment;
     };
 
     vector<Grid4FromLatLngTest> testList = {
-        {  40.738059,  -74.036227, "FN20", "New Jersey example",        },
-        { -26.301960,  -66.709667, "FG63", "Argentina example",         },
-        { -31.951585,  115.824861, "OF78", "Australia example",         },
-        {  10.813707,  106.609537, "OK30", "Vietnam example",           },
-        { -90.000000, -180.000000, "AA00", "southwest world boundary",  },
-        {  90.000000,  180.000000, "RR99", "northeast world boundary",  },
-        {   0.000000,  181.000000, "AJ00", "longitude wraps east",      },
-        {   0.000000, -181.000000, "RJ90", "longitude wraps west",      },
+        {  40.738059,  -74.036227, "FN20", "FN20XR", "New Jersey example",        },
+        { -26.301960,  -66.709667, "FG63", "FG63PQ", "Argentina example",         },
+        { -31.951585,  115.824861, "OF78", "OF78VB", "Australia example",         },
+        {  10.813707,  106.609537, "OK30", "OK30HT", "Vietnam example",           },
+        { -90.000000, -180.000000, "AA00", "AA00AA", "southwest world boundary",  },
+        {  90.000000,  180.000000, "RR99", "RR99XX", "northeast world boundary",  },
+        {   0.000000,  181.000000, "AJ00", "AJ00LA", "longitude wraps east",      },
+        {   0.000000, -181.000000, "RJ90", "RJ90LA", "longitude wraps west",      },
     };
 
     bool retVal = true;
@@ -123,6 +124,7 @@ bool TestGrid4FromLatLng()
     for (const auto &test : testList)
     {
         char grid4[5] = { 0 };
+        char grid6[7] = { 0 };
         bool ok = WsprMessageRegularType1::Grid4FromLatLng(test.latitude, test.longitude, grid4, sizeof(grid4));
         if (!ok || strcmp(grid4, test.expectedGrid4) != 0)
         {
@@ -131,15 +133,28 @@ bool TestGrid4FromLatLng()
                  << ", but expected " << test.expectedGrid4
                  << " (" << test.comment << ")" << endl;
         }
+        ok = WsprMessageRegularType1::Grid6FromLatLng(test.latitude, test.longitude, grid6, sizeof(grid6));
+        if (!ok || strcmp(grid6, test.expectedGrid6) != 0)
+        {
+            retVal = false;
+            cout << "ERR: Got " << grid6 << " with ok=" << ok
+                 << ", but expected " << test.expectedGrid6
+                 << " (" << test.comment << ")" << endl;
+        }
     }
 
     char grid4[5] = { 0 };
+    char grid6[7] = { 0 };
     retVal &= CheckErr(InputTest<char *, bool>{ nullptr, false, "nullptr output buffer" },
                        WsprMessageRegularType1::Grid4FromLatLng(0.0, 0.0, nullptr, sizeof(grid4)));
     retVal &= CheckErr(InputTest<size_t, bool>{ 4, false, "output buffer too small" },
                        WsprMessageRegularType1::Grid4FromLatLng(0.0, 0.0, grid4, 4));
+    retVal &= CheckErr(InputTest<char *, bool>{ nullptr, false, "nullptr grid6 output buffer" },
+                       WsprMessageRegularType1::Grid6FromLatLng(0.0, 0.0, nullptr, sizeof(grid6)));
+    retVal &= CheckErr(InputTest<size_t, bool>{ 6, false, "grid6 output buffer too small" },
+                       WsprMessageRegularType1::Grid6FromLatLng(0.0, 0.0, grid6, 6));
 
-    cout << "Grid4FromLatLng test: " << retVal << endl;
+    cout << "Grid4/Grid6 FromLatLng test: " << retVal << endl;
 
     return retVal;
 }
