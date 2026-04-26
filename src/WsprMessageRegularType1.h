@@ -159,6 +159,72 @@ public:
         return retVal;
     }
 
+    static bool Grid4FromLatLngDegMillionths(int32_t latDegMillionths,
+                                             int32_t lngDegMillionths,
+                                             char *grid4,
+                                             size_t grid4Capacity)
+    {
+        if (!grid4 || grid4Capacity < GRID4_LEN + 1)
+        {
+            return false;
+        }
+
+        // Put lat/long in 10-thousandths
+        int32_t lat = latDegMillionths / 100;
+        int32_t lng = lngDegMillionths / 100;
+
+        // Put into grid space, no negative degrees
+        lat += (90  * 10000UL);
+        lng += (180 * 10000UL);
+
+        grid4[0] = 'A' +   (lng / 200000);
+        grid4[1] = 'A' +   (lat / 100000);
+        grid4[2] = '0' +  ((lng % 200000) / 20000);
+        grid4[3] = '0' +  ((lat % 100000) / 10000);
+        grid4[4] = '\0';
+
+        return true;
+    }
+
+    static bool Grid4FromLatLng(double latitude, double longitude, char *grid4, size_t grid4Capacity)
+    {
+        constexpr double LAT_MIN      = -90.0;
+        constexpr double LAT_MAX_EXCL =  90.0;
+        constexpr double LNG_MIN      = -180.0;
+        constexpr double LNG_MAX_EXCL =  180.0;
+
+        if (latitude < LAT_MIN)
+        {
+            latitude = LAT_MIN;
+        }
+        else if (latitude >= LAT_MAX_EXCL)
+        {
+            latitude = LAT_MAX_EXCL - 0.000001;
+        }
+
+        while (longitude < LNG_MIN)
+        {
+            longitude += 360.0;
+        }
+        while (longitude > LNG_MAX_EXCL)
+        {
+            longitude -= 360.0;
+        }
+        if (longitude < LNG_MIN)
+        {
+            longitude = LNG_MIN;
+        }
+        else if (longitude >= LNG_MAX_EXCL)
+        {
+            longitude = LNG_MAX_EXCL - 0.000001;
+        }
+
+        int32_t latDegMillionths = static_cast<int32_t>(latitude * 1000000.0);
+        int32_t lngDegMillionths = static_cast<int32_t>(longitude * 1000000.0);
+
+        return Grid4FromLatLngDegMillionths(latDegMillionths, lngDegMillionths, grid4, grid4Capacity);
+    }
+
 
 
 private:
