@@ -832,9 +832,9 @@ bool TestSegmentedField()
     Msg msg1;
 
     const std::array<SegmentDef, 3> segments = {{
-        { -60, -30, 5 },
-        { -30,  30, 3 },
-        {  30,  70, 8 },
+        { -60, 5, -30 },
+        { -30, 3,  30 },
+        {  30, 8,  70 },
     }};
 
     bool defineOk = msg1.DefineField("Temp", segments);
@@ -870,8 +870,8 @@ bool TestSegmentedFieldTieRoundsUp()
     using SegmentDef = Msg::SegmentDef;
 
     const std::array<SegmentDef, 2> segments = {{
-        { 0, 20, 10 },
-        { 20, 50, 15 },
+        { 0, 10, 20 },
+        { 20, 15, 50 },
     }};
 
     Msg msg1;

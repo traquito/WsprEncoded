@@ -36,13 +36,13 @@ public:
         Base::ResetEverything();
 
         static constexpr std::array<typename Base::SegmentDef, 2> temperatureSegments = {{
-            { -80, 40, 5 },
-            {  40, 64, 8 },
+            { -80, 5, 40 },
+            {  40, 8, 64 },
         }};
         static constexpr std::array<typename Base::SegmentDef, 3> voltageSegments = {{
-            { 2.70, 3.10, 0.08 },
-            { 3.10, 5.26, 0.06 },
-            { 5.26, 6.06, 0.08 },
+            { 2.70, 0.08, 3.10 },
+            { 3.10, 0.06, 5.26 },
+            { 5.26, 0.08, 6.06 },
         }};
 
         Base::DefineField("Id13", 0, 19, 1);

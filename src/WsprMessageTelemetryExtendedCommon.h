@@ -28,8 +28,8 @@ public:
     struct SegmentDef
     {
         double lowValue = 0;
-        double highValue = 0;
         double stepSize = 0;
+        double highValue = 0;
         uint32_t numValues = 0;
     };
 
